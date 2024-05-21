@@ -2,6 +2,7 @@ import 'package:apniseva/controller/address_controller/address_controller.dart';
 import 'package:apniseva/utils/buttons.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,11 +38,6 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     Future.delayed(Duration.zero, () {
       locController.getLoc();
     });
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     if (widget.apiCall == 1) {
       if (widget.addressData != null) {
         addressController.firstName.text = widget.addressData!.firstName ?? '';
@@ -52,8 +48,28 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         addressController.address2.text = widget.addressData!.adress2 ?? '';
         addressController.pinCode.text = widget.addressData!.pincode ?? '';
         addressController.state.text = widget.addressData!.state ?? '';
-      }
-    }
+      } else {}
+    } else {}
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    addressController.firstName.text = '';
+    addressController.lastName.text = '';
+    addressController.email.text = "";
+    addressController.phone.text = "";
+    addressController.address1.text = '';
+    addressController.address2.text = '';
+    addressController.pinCode.text = '';
+    addressController.state.text = "";
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
 
@@ -135,7 +151,13 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                   if (addressController.email.text.isEmpty) {
                     return 'Fill you Email';
                   } else {
-                    return null;
+                    if (!RegExp(
+                            r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+                        .hasMatch(value!)) {
+                      return 'Fill correct Email';
+                    } else {
+                      return null;
+                    }
                   }
                 },
                 hintText: 'sureshkumar@gmail.com',
@@ -148,10 +170,15 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                   if (addressController.phone.text.isEmpty) {
                     return 'Fill you Mobile Number';
                   } else {
+                    if (!RegExp(r'^[0-9]+$').hasMatch(value!) ||
+                        value.length != 10) {
+                      return 'Enter a correct Mobile Number';
+                    }
                     return null;
                   }
                 },
                 keyboardType: TextInputType.phone,
+                maxInputNumber: 10,
                 hintText: '1234567890',
               ),
 
@@ -198,10 +225,14 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       : DropdownButtonFormField(
                           value: getLoc,
                           hint: const Text('Choose your Location'),
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: (value) {
-                            if (value!.isEmpty) {
+                            // return "Fill your address";
+                            if (getLoc == null) {
+                              // print("your Validation call in here");
                               return 'Fill your Address';
                             } else {
+                              print(getLoc);
                               return null;
                             }
                           },
@@ -235,28 +266,35 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               }),
               const SizedBox(height: 8.0),
 
-              Header(title: AddressStrings.fState),
-              TextInputField(
-                controller: addressController.state,
-                validator: (value) {
-                  if (addressController.state.text.isEmpty) {
-                    return 'Fill you State';
-                  } else {
-                    return null;
-                  }
-                },
-                hintText: 'Odisha',
-              ),
+              // Header(title: AddressStrings.fState),
+              // TextInputField(
+              //   controller: addressController.state,
+              //   validator: (value) {
+              //     if (addressController.state.text.isEmpty) {
+              //       return 'Fill you State';
+              //     } else {
+              //       return null;
+              //     }
+              //   },
+              //   hintText: 'Odisha',
+              // ),
 
               Header(title: AddressStrings.fPinCode),
               TextInputField(
                 controller: addressController.pinCode,
                 hintText: '751016',
+                keyboardType: TextInputType.number,
+                maxInputNumber: 6,
                 validator: (value) {
                   if (addressController.pinCode.text.isEmpty) {
                     return 'Fill you Pin-Code';
                   } else {
-                    return null;
+                    if (!RegExp(r'^[0-9]+$').hasMatch(value!) ||
+                        value.length != 6) {
+                      return 'Enter a correct Mobile Number';
+                    } else {
+                      return null;
+                    }
                   }
                 },
               ),
@@ -280,14 +318,20 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       Future.delayed(Duration.zero, () {
                         addressController.addAddress();
                       });
+                      Get.back();
                     } else if (widget.apiCall == 1) {
                       debugPrint("Updated Address");
                       Future.delayed(Duration.zero, () {
                         addressController.updateAddress();
                       });
+                      Get.back();
                     } else {}
+                  } else {
+                    Get.snackbar('Address', "Fill All Address",
+                        colorText: Colors.white);
+                    // print("Fill All the form carefully");
                   }
-                  Get.back();
+                  // Get.back();
                 },
                 child: Obx(() {
                   return addressController.isLoading.value == true

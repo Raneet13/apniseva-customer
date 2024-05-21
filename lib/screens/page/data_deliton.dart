@@ -16,7 +16,9 @@ class _DataDeletionState extends State<DataDeletion> {
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..runJavaScript(
         "document.getElementsByTagName('body')[0].style.display='none';")
-    ..loadRequest(Uri.parse("https://apniseva.com/Request_deletion"));
+    ..loadRequest(Uri.parse("https://apniseva.com/Request_deletion"))
+    ..enableZoom(false);
+
   // ..setNavigationDelegate(NavigationDelegate(
   //   onProgress: (int progress) {
   //     CircularProgressIndicator();
@@ -96,6 +98,7 @@ class _DataDeletionState extends State<DataDeletion> {
 
   @override
   Widget build(BuildContext context) {
+    _controller.scrollTo(0, 0);
     return Scaffold(
         appBar: PrimaryAppBar(
           title: "Data Delition",

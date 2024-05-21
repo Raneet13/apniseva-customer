@@ -311,6 +311,7 @@ class CartController extends GetxController {
 
     http.Response response = await http.post(Uri.parse(checkOutAPI),
         body: jsonEncode(body), headers: headers);
+    print(response.body);
     checkOutModel = checkOutDataModelFromJson(response.body);
     if (response.statusCode == 200 && checkOutModel.status == 200) {
       checkoutDataModel.value = checkOutModel;

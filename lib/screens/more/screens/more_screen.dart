@@ -309,7 +309,7 @@ class _MoreScreenState extends State<MoreScreen> {
                       child: FittedBox(
                         fit: BoxFit.contain,
                         child: Text(
-                          ' Support & Help',
+                          ' Request For Deletion',
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                       )),

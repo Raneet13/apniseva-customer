@@ -13,6 +13,7 @@ import '../../../utils/color.dart';
 import '../../../utils/input_field.dart';
 import '../../location/screen/location.dart';
 import '../sections/dash_appbar.dart';
+import '../sections/dash_carousel.dart';
 
 class DashScreen extends StatefulWidget {
   const DashScreen({
@@ -97,11 +98,11 @@ class _DashScreenState extends State<DashScreen> {
                         getData: dashController
                             .dashDataModel.value.messages!.status!.categoryDtl!,
                       ),
-                      // SizedBox(height: height * 0.02),
-                      // DashCarousel(
-                      //   getData: dashController
-                      //       .dashDataModel.value.messages!.status!.offerDtl!,
-                      // ),
+                      SizedBox(height: height * 0.02),
+                      DashCarousel(
+                        getData: dashController
+                            .dashDataModel.value.messages!.status!.offerDtl!,
+                      ),
                       SizedBox(height: height * 0.02),
                       // Align(
                       //     alignment: Alignment.centerLeft,

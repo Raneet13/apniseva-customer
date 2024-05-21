@@ -3,8 +3,8 @@ class AddressStrings {
   static String name = 'Name: ';
   static String mobile = 'Mobile: ';
   static String email = 'Email: ';
-  static String address1= 'Address 1: ';
-  static String address2= 'Address 2: ';
+  static String address1 = 'Address 1: ';
+  static String address2 = 'Address 2: ';
   static String city = 'City: ';
   static String state = 'State: ';
   static String pinCode = 'Pin: ';
@@ -17,6 +17,5 @@ class AddressStrings {
   static String fAddress2 = 'Address 2';
   static String fCity = 'City';
   static String fState = 'State';
-  static String fPinCode = 'Pin-Code';
-
+  static String fPinCode = 'PinCode';
 }

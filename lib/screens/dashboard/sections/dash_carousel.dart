@@ -46,7 +46,7 @@ class DashCarousel extends StatelessWidget {
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(8),
                     image: DecorationImage(
-                      fit: BoxFit.cover,
+                      fit: BoxFit.fill,
                       image: NetworkImage(
                         '${ApiEndPoint.imageAPI}/${data![index].img}',
                       ),

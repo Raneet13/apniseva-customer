@@ -66,12 +66,14 @@ class _AddressScreenState extends State<AddressScreen> {
                       if (addressController.addressID != null) {
                         Navigator.pop(context);
                       } else {
-                        Get.showSnackbar(
-                          const GetSnackBar(
-                            title: 'Error',
-                            message: "Select an address",
-                          ),
-                        );
+                        Get.snackbar('error', "Select An Address",
+                            colorText: Colors.white);
+                        // Get.showSnackbar(
+                        //   const GetSnackBar(
+                        //     title: 'Error',
+                        //     message: "Select an address",
+                        //   ),
+                        // );
                       }
                     },
                     child: Text(
@@ -173,12 +175,17 @@ class _AddressScreenState extends State<AddressScreen> {
                                                         addressData.addressId!);
                                                     debugPrint(
                                                         "Address ID: ${addressData.addressId.toString()}");
-                                                    Get.to(
-                                                        () => AddressFormScreen(
-                                                              apiCall: 1,
-                                                              addressData:
-                                                                  addressData,
-                                                            ));
+                                                    Navigator.pushReplacement(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                AddressFormScreen(
+                                                                  apiCall: 1,
+                                                                  addressData:
+                                                                      addressData,
+                                                                )));
+                                                    // Get.to(
+                                                    //     () => );
                                                   },
                                                   style: ButtonStyle(
                                                       backgroundColor:
@@ -357,7 +364,11 @@ class _AddressScreenState extends State<AddressScreen> {
                       )),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            Get.to(() => const AddressFormScreen(apiCall: 0));
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AddressFormScreen(apiCall: 0)));
+            // Get.to(() => const AddressFormScreen(apiCall: 0));
           },
           child: const Icon(
             Remix.add_circle_line,
