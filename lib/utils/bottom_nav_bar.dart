@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:apniseva/screens/dashboard/screens/dashboard_screen.dart';
 import 'package:apniseva/screens/more/screens/more_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
@@ -10,6 +11,7 @@ import 'package:badges/badges.dart' as badges;
 import '../controller/cart_controller/cart_controller.dart';
 import '../main.dart';
 import '../screens/cart/screen/cart_screen.dart';
+import '../screens/notification/localNotification.dart';
 import '../screens/orders/screens/order_screen.dart';
 import 'color.dart';
 
@@ -31,6 +33,15 @@ class _BottomNavBarState extends State<BottomNavBar> {
       PersistentTabController(initialIndex: 0);
   DateTime? currentBackPressTime;
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      notificationInit(context);
+    });
+  }
+
   Future<bool> onWillPop() {
     if (isModalOpen) {
       isModalOpen = false;
@@ -45,6 +56,147 @@ class _BottomNavBarState extends State<BottomNavBar> {
       }
       exit(0);
     }
+  }
+
+  Future<void> backgroundHandler(RemoteMessage message) async {
+    LocalNotificationService.initialize();
+    LocalNotificationService.createanddisplaynotification(message);
+  }
+
+  notificationInit(BuildContext context) async {
+    FirebaseMessaging.onBackgroundMessage(backgroundHandler);
+    FirebaseMessaging.instance.getInitialMessage();
+    FirebaseMessaging.instance.getInitialMessage().then(
+      (message) {
+        // print("FirebaseMessaging.instance.getInitialMessage");
+        if (message != null) {
+          // print("New Notification");
+          // print(message.data['_id']);
+          if (message.data['_id'] != null) {
+            LocalNotificationService.initialize();
+            LocalNotificationService.createanddisplaynotification(message);
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(
+            //     builder: (context) => NavigateScreen(
+            //       id: message.data['_id'].toString() ?? "",
+            //     ),
+            //   ),
+            // );
+          } else
+            LocalNotificationService.createanddisplaynotification(message);
+        }
+      },
+    );
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // print(
+      //     "This messssage iis not come to you r phone beacase of the notificatio nt allow by th user");
+
+      if (message.notification != null) {
+        // print('Message also contained a notification: ${message.notification}');
+        LocalNotificationService.initialize();
+        // if (kIsWeb) {
+        //   ShowToast(msg: "Notification is error  is come");
+        // } else {
+        LocalNotificationService.createanddisplaynotification(message);
+        print(
+            "title:${message.notification!.title}, message: ${message.notification!.body}");
+        // if (message.notification!.title == "Booking Start") {
+        //   Provider.of<BookingtaxiViewmodel>(context, listen: false)
+        //       .serachDriverCustomer(context);
+        // }
+        // //
+        // if (message.notification!.title == "Booking Complete") {
+        //   // Provider.of<BookingtaxiViewmodel>(context, listen: false)
+        //   //     .findDriver(bookingId: "134");
+        //   Provider.of<TabViewmodel>(context, listen: true)
+        //               .tabController
+        //               .index ==
+        //           2
+        //       ? context.push('/home/thankyouScreen', extra: {'id': '0'})
+        //       : context.push('/home/sucessRide', extra: {'id': '0'});
+        // }
+        // // ShowToast(msg: "Notification is come");
+        // print(
+        //     "This messssage iis not come to you r phone beacase of the notificatio nt allow by th user");
+        // }
+        // context.go('/home/conformBooking', extra: {'id': '0'});
+        // Provider.of<BookingtaxiViewmodel>(context, listen: false)
+        //     .serachDriverCustomer(context);
+        // WidgetsBinding.instance!.addPostFrameCallback((_) {
+        // WidgetsBinding.instance!.addPostFrameCallback((_) {
+        //   if (mounted) {
+        //     showDialog(
+        //       context: context,
+        //       builder: (context) {
+        //         return AlertDialog(
+        //           title: Text("Notification"),
+        //           content: Column(
+        //             mainAxisSize: MainAxisSize.min,
+        //             children: [
+        //               Text("This is your notification"),
+        //               Text("${message.notification!.title}"),
+        //               Text("Message: ${message.notification!.body}"),
+        //             ],
+        //           ),
+        //         );
+        //       },
+        //     );
+        //   }
+        // });
+
+        // });
+      } else {
+        print(message);
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print("yu click the notification");
+    });
+    // FirebaseMessaging.onMessage.listen(
+    //   (message) async {
+    //     print("FirebaseMessaging.onMessage.listen");
+
+    //     final noti = message.notification;
+    //     final androidChannel = LocalNotificationService.androidChannel;
+    //     if (noti != null) {
+    //       print(noti.title);
+    //       print(noti.body);
+
+    //       print("message.data11 ${message.data}");
+    //       showOverlayNotification(
+    //           (context) => Text("This is your notification"));
+    //       // showSimpleNotification(Text(noti.title.toString()),
+    //       //     subtitle: Text(noti.body.toString()),
+    //       //     duration: Duration(seconds: 5));
+    //       // LocalNotificationService.notificationsPlugin.show(
+    //       //     noti.hashCode,
+    //       //     noti.title,
+    //       //     noti.body,
+    //       //     NotificationDetails(
+    //       //         android: AndroidNotificationDetails(
+    //       //       androidChannel.id, androidChannel.name,
+    //       //       channelDescription: androidChannel.description,
+    //       //       // icon: '@drawable/launcher_icon.png'
+    //       //     )),
+    //       //     payload: jsonEncode(message.toMap()));
+    //       // LocalNotificationService.initialize(context, message);
+    //       // LocalNotificationService.createanddisplaynotification(message);
+    //     }
+    //   },
+    // );
+
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (message) {
+        print("FirebaseMessaging.onMessageOpenedApp.listen");
+        if (message.notification != null) {
+          // print(message.notification!.title);
+          // print(message.notification!.body);
+          // print("message.data22 ${message.data['_id']}");
+          LocalNotificationService.createanddisplaynotification(message);
+        }
+      },
+    );
   }
 
   @override

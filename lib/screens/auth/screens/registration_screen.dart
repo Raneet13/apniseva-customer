@@ -1,4 +1,5 @@
 import 'package:apniseva/controller/auth_controller/auth_controller.dart';
+import 'package:apniseva/screens/notification/localNotification.dart';
 import 'package:apniseva/screens/splash_screen/widgets/spalsh_string.dart';
 import 'package:apniseva/utils/buttons.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _regdKey = GlobalKey<FormState>();
   final AuthController authController = Get.put(AuthController());
   String? errorLabel;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      LocalNotificationService.initNoti();
+      await authController.getDeviceTokenToSendNotification();
+    });
+  }
 
   @override
   void dispose() {

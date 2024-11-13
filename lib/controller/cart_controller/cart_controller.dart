@@ -107,6 +107,13 @@ class CartController extends GetxController {
       SharedPreferences preferences = await SharedPreferences.getInstance();
       String? userID = preferences.getString(ApiStrings.userID);
       String? cityID = preferences.getString(ApiStrings.cityID);
+      String? addressIDPref = preferences.getString(ApiStrings.addressID);
+      dateController.text = DateFormat('dd-MM-yyyy')
+          .format(DateTime.now()); //datetime when cart load
+      timeController.text = DateFormat('hh:mm a').format(DateTime.now());
+      // print("addressID:${addressIDPref}");
+      addressID = addressIDPref;
+
       String? cartAPI = ApiEndPoint.cartDetails;
 
       Map<String, String> body = {'user_id': userID!, 'city_id': cityID!};
@@ -124,6 +131,24 @@ class CartController extends GetxController {
       if (response.statusCode == 200 && cartModel.status == 200) {
         cartDetailsDataModel.value = cartModel;
         // print(cartModel.toJson());
+        //fetch address of previous
+        if (addressID != null) {
+          int indexAddress = cartModel.messages!.status!.addressData!
+              .indexWhere((map) => map.addressId == addressID);
+          AddressDatum addressData =
+              cartModel.messages!.status!.addressData![indexAddress];
+          //address
+          firstName = addressData.firstName;
+          lastName = addressData.lastName;
+          number = addressData.number;
+          email = addressData.email;
+          address1 = addressData.address1;
+          address2 = addressData.adress2;
+          state = addressData.state;
+          pinCode = addressData.pincode;
+        }
+        //address
+        //Fetch Address of previous
         fetch.value = false;
       }
 

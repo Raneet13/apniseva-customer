@@ -8,9 +8,11 @@ import 'package:apniseva/utils/api_strings/api_strings.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:badges/badges.dart' as badges;
 import '../../../model/cart_model/cart_detail_model/cart_details_model.dart';
+import '../../cart/screen/cart_screen.dart';
 
 class ServiceScreen extends StatefulWidget {
   final String serviceName;
@@ -110,6 +112,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cartController = Get.find<CartController>();
     return Obx(
       () {
         // print(serviceController.serviceDataModel.value.messages?.status!
@@ -125,6 +128,122 @@ class _ServiceScreenState extends State<ServiceScreen> {
               )
             : Scaffold(
                 appBar: ServiceAppBar(title: ServiceStrings.serviceName),
+                bottomSheet: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Blue banner at the top
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                      color: Colors.blue,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Icon with notification bubble
+                          Stack(
+                            children: [
+                              Icon(
+                                Icons.shopping_bag_outlined,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  height: 55,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10.0),
+                                  alignment: Alignment.center,
+                                  child: badges.Badge(
+                                      // position: badges.BadgePosition.topEnd(
+                                      //     top: -0, end: -5),
+                                      showBadge: cartController
+                                                  .cartDetailsDataModel
+                                                  .value
+                                                  .messages
+                                                  ?.status!
+                                                  .allCart ==
+                                              null
+                                          ? false
+                                          : true,
+                                      badgeContent: Text(
+                                        cartController
+                                                    .cartDetailsDataModel
+                                                    .value
+                                                    .messages
+                                                    ?.status!
+                                                    .allCart ==
+                                                null
+                                            ? ''
+                                            : cartController
+                                                .cartDetailsDataModel
+                                                .value
+                                                .messages!
+                                                .status!
+                                                .allCart!
+                                                .length
+                                                .toString(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall,
+                                      ),
+                                      child: const Icon(
+                                        Remix.shopping_cart_2_fill,
+                                        color: Colors.white,
+                                      )),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(width: 10),
+                          // Text: "Add 2 more items to get 5% off"
+                          // Expanded(
+                          //   child: Text(
+                          //     'Add 2 more items to get 5% off',
+                          //     style: TextStyle(
+                          //       color: Colors.white,
+                          //       fontSize: 16,
+                          //       fontWeight: FontWeight.w500,
+                          //     ),
+                          //   ),
+                          // ),
+                        ],
+                      ),
+                    ),
+                    // Space between banners
+                    SizedBox(height: 8),
+                    // Bottom banner with item count and "Go to Cart"
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                      color: Colors.blue.shade50,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${cartController.cartDetailsDataModel.value.messages?.status!.allCart == null ? '' : cartController.cartDetailsDataModel.value.messages!.status!.allCart!.length.toString()} item',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              Get.to(() => const CartScreen());
+                            },
+                            child: Text(
+                              'Go to Cart',
+                              style: const TextStyle(
+                                // color: Colors.blue,
+                                fontSize: 16,
+                                // fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                 body: serviceController.serviceDataModel.value.messages?.status!
                                 .serviceList! ==
                             null ||

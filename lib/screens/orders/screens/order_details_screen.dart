@@ -393,6 +393,48 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
                                       ],
                                     );
                                   }),
+                              orderDetailsController.orderDetailsModel.value
+                                          .messages!.status!.otherDtl!.status !=
+                                      "2"
+                                  ? SizedBox()
+                                  : Padding(
+                                      padding: const EdgeInsets.only(right: 20),
+                                      child: Align(
+                                          alignment: Alignment.center,
+                                          child: TextButton(
+                                              onPressed: () =>
+                                                  orderDetailsController
+                                                      .aceptAdditionalBill(),
+                                              //additionalPayment(), //orderDetailsController
+                                              //.aditionalPayment(), //additionalPayment(),
+                                              style: ButtonStyle(
+                                                  backgroundColor:
+                                                      MaterialStatePropertyAll(
+                                                          primaryColor
+                                                              .withOpacity(
+                                                                  0.8)),
+                                                  padding:
+                                                      MaterialStatePropertyAll(
+                                                          EdgeInsets.all(5)),
+                                                  shape: MaterialStateProperty.all(
+                                                      RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10)))),
+                                              child: Text(
+                                                "Acept All Additinal Bill",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  decoration:
+                                                      TextDecoration.none,
+                                                  fontSize: 16,
+                                                ),
+                                              ))),
+                                    ),
+                              SizedBox(
+                                height: height * 0.01,
+                              ),
                             ],
                           ),
                         )),
@@ -537,7 +579,9 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
                     SizedBox(
                       height: height * 0.04,
                     ),
-                    widget.status == "Work Completed"
+                    orderDetailsController.orderDetailsModel.value.messages!
+                                .status!.otherDtl!.status ==
+                            "5"
                         ? RateAndReview()
                         : SizedBox(),
                     SizedBox(
@@ -898,6 +942,12 @@ class RateAndReview extends StatefulWidget {
 
 class _RateAndReviewState extends State<RateAndReview> {
   final orderDetailsController = Get.put(OrderDetailsController());
+  Future<void> refresh() async {
+    return Future.delayed(Duration.zero, () {
+      orderDetailsController.getOrderDetails();
+    });
+  }
+
   rateAndREview(context) {
     showDialog(
       context: context,
@@ -1120,7 +1170,11 @@ class _RateAndReviewState extends State<RateAndReview> {
                     //     .status!.otherDtl!.orderId
                     //     .toString());
                     orderDetailsController.rateAndRevew();
-                    Get.back();
+                    //   Get.back();
+                    //  refresh();
+                    Navigator.pop(context);
+                    // Get.back();
+                    refresh();
                   },
                   child: Text(
                     "Submit",
