@@ -39,38 +39,110 @@ class _SearchFieldState extends State<SearchField> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: TypeAheadFormField<SearchDtl>(
-        suggestionsCallback: _suggestionCallBack,
-        itemBuilder: (context, SearchDtl suggestion) {
-          final search = suggestion;
-          return ListTile(
-            title: Text(search.serviceName!),
-          );
-        },
-        onSuggestionSelected: (SearchDtl suggestion) async {
-          SharedPreferences preferences = await SharedPreferences.getInstance();
-          preferences.setString(ApiStrings.catID, suggestion.catId!);
-          String? value = preferences.getString(ApiStrings.categoryID);
-          debugPrint(value);
-          // debugPrint(suggestion.serviceName);
-          debugPrint(suggestion.catId);
-          Get.to(() => const ServiceScreen());
-        },
-        noItemsFoundBuilder: (context) =>
-            const Center(child: Text('No Service')),
-        textFieldConfiguration: TextFieldConfiguration(
-            style: Theme.of(context).textTheme.headlineMedium,
-            decoration: InputDecoration(
+      // child: 
+      // TypeAheadField<SearchDtl>(
+      //   suggestionsCallback: _suggestionCallBack,
+      //   itemBuilder: (context, SearchDtl suggestion) {
+      //     final search = suggestion;
+      //     return ListTile(
+      //       title: Text(search.serviceName!),
+      //     );
+      //   },
+      //   onSuggestionSelected: (SearchDtl suggestion) async {
+      //     SharedPreferences preferences = await SharedPreferences.getInstance();
+      //     preferences.setString(ApiStrings.catID, suggestion.catId!);
+      //     String? value = preferences.getString(ApiStrings.categoryID);
+      //     debugPrint(value);
+      //     // debugPrint(suggestion.serviceName);
+      //     debugPrint(suggestion.catId);
+      //     Get.to(() => const ServiceScreen());
+      //   },
+      //   noItemsFoundBuilder: (context) =>
+      //       const Center(child: Text('No Service')),
+      //   textFieldConfiguration: TextFieldConfiguration(
+      //       style: Theme.of(context).textTheme.headlineMedium,
+      //       decoration: InputDecoration(
+      //         contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+      //         hintText: 'AC repair, Washing Machine . . .',
+      //         hintStyle: Theme.of(context).textTheme.titleMedium,
+      //         prefixIcon: const Icon(Remix.search_2_line),
+      //       )),
+      //   suggestionsBoxDecoration: SuggestionsBoxDecoration(
+      //       elevation: 1.5,
+      //       shape: RoundedRectangleBorder(
+      //           borderRadius: BorderRadius.circular(8.0))),
+      // ),
+     child: TypeAheadField<SearchDtl>(
+                    builder: (context, controlle, focusNode) {
+                      return TextFormField(
+      controller: controlle,
+      focusNode: focusNode,
+      // autofocus: false,
+      decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               hintText: 'AC repair, Washing Machine . . .',
               hintStyle: Theme.of(context).textTheme.titleMedium,
               prefixIcon: const Icon(Remix.search_2_line),
-            )),
-        suggestionsBoxDecoration: SuggestionsBoxDecoration(
-            elevation: 1.5,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0))),
-      ),
+            ),
+    );
+                    },
+  suggestionsCallback:(pattern){
+    // print(pattern);
+
+    // final filteredCities = controller.location.value.messages?.data?.first.cities
+    //         ?.where((city) =>
+    //             city.cityName?.toLowerCase().contains(pattern.toLowerCase()) ?? false)
+    //         .toList() ??
+    //     [];
+       
+                    // return filteredCities;
+                     if (pattern.isEmpty) {
+      return [];
+    }
+                    var filteredCities= searchController.dashDataModel.value.messages!.status!.searchDtl!
+        .where((SearchDtl serviceName) =>
+            serviceName.serviceName
+                ?.toLowerCase()
+                .toString()
+                .contains(pattern.toLowerCase()) ??
+            false).toList()??[];
+            return filteredCities;
+  },
+  itemBuilder: (context, SearchDtl suggestion) {
+           final search = suggestion;
+          return ListTile(
+            title: Text(search.serviceName!),
+          );
+    // return ListTile(
+    //   title: Text(suggestion.cityName ?? ""),
+    // );
+  },
+  emptyBuilder: (context) {
+    // Show a "No city available" message when there are no matches.
+    // return  Padding(
+    //   padding: const EdgeInsets.all(16.0),
+    //   child: Text(
+    //     "No Service",
+    //     textAlign: TextAlign.center,
+    //     style: TextStyle(color: Colors.grey),
+    //   ),
+    // );
+    return SizedBox();
+  },
+  onSelected: (SearchDtl suggestion) async{
+     SharedPreferences preferences = await SharedPreferences.getInstance();
+          preferences.setString(ApiStrings.catID, suggestion.catId!);
+          String? value = preferences.getString(ApiStrings.categoryID);
+          debugPrint(value);
+          // debugPrint(suggestion.serviceName);
+          // debugPrint(suggestion.catId);
+          Get.to(() => const ServiceScreen());
+    // if (newValue != null) {
+    //   controller.selectC(addrs: newValue);
+    // }
+  },
+),
+    
     );
   }
 }

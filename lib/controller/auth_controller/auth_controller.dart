@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:apniseva/model/auth_model/user_data_model.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -16,6 +17,13 @@ class AuthController extends GetxController {
 
   RxBool isLoading = false.obs;
   Rx<UserDataModel> userModel = UserDataModel().obs;
+  String deviceTokenToSendPushNotification = "";
+  Future<void> getDeviceTokenToSendNotification() async {
+    final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+    final token = await _fcm.getToken();
+    print("Your Toke Value is : ${token}");
+    deviceTokenToSendPushNotification = token.toString();
+  }
 
   loginWithOTP() async {
     SharedPreferences pref = await SharedPreferences.getInstance();

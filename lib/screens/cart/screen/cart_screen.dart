@@ -8,6 +8,7 @@ import 'package:apniseva/utils/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/buttons.dart';
@@ -152,9 +153,10 @@ class _CartScreenState extends State<CartScreen> {
                                   return Card(
                                       color: Colors.grey.shade200,
                                       child: Container(
-                                        height: 75,
+                                        // height: 75,
                                         alignment: Alignment.center,
                                         child: ListTile(
+                                          // isThreeLine: true,
                                           contentPadding:
                                               const EdgeInsets.symmetric(
                                                   vertical: 2, horizontal: 8),
@@ -199,17 +201,33 @@ class _CartScreenState extends State<CartScreen> {
                                               ),
                                             ),
                                           ),
+                                          
                                           title: Text(
                                             cartData[index].servicename!,
-                                            style: Theme.of(context)
+                                            maxLines: 2,
+                                            style:GoogleFonts.openSans(textStyle: Theme.of(context)
                                                 .textTheme
-                                                .headlineSmall,
+                                                .headlineSmall,)
                                           ),
-                                          subtitle: Text(
-                                            '₹ ${cartData[index].price}',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge,
+                                          subtitle: Column(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              SizedBox(height: 4,),
+                                              Text(
+                                                '₹ ${cartData[index].price}',
+                                                style: GoogleFonts.roboto(textStyle:Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge,fontSize: 14)
+                                              ),
+                                              // SizedBox(height: 4,),
+                                              // Text(
+                                              //   '₹ ${cartData[index].price}',
+                                              //   style: Theme.of(context)
+                                              //       .textTheme
+                                              //       .titleLarge,
+                                              // ),
+                                            ],
                                           ),
                                           trailing: Row(
                                             mainAxisSize: MainAxisSize.min,

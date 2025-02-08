@@ -27,6 +27,51 @@ class OrderDetailsController extends GetxController {
   String? email;
   String? userId;
 
+  aceptAdditionalBill() async {
+    try {
+      isLoading.value = true;
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      String? userID = preferences.getString(ApiStrings.userID);
+      String? orderID = preferences.getString(ApiStrings.orderID);
+      String? technicianID = preferences.getString(ApiStrings.technicianId);
+      // String? technicianRating = preferences.getString(ApiStrings.ratngTechniian);
+      // String? technicianRview = preferences.getString(ApiStrings.userID);
+      // String? companyRating = preferences.getString(ApiStrings.orderID);
+      // String? companyReviiew = preferences.getString(ApiStrings.orderID);
+
+      String? acceptaditinalorder = ApiEndPoint.acceptAditinalOrder;
+      Map<String, String> body = {
+        'order_id': orderID!,
+        'status': "3",
+      };
+
+      Map<String, String> headers = {
+        "Content-Type": "application/json; charset=utf-8"
+      };
+
+      http.Response response = await http.post(Uri.parse(acceptaditinalorder),
+          body: jsonEncode(body), headers: headers);
+      //   debugPrint("Status Code: ${response.statusCode.toString()}");
+      //   debugPrint("Status Code: ${response.body.toString()}");
+      // ratingModel = ratingModelUserFromJson(response.body);
+
+      if (response.statusCode == 200) {
+        // print('orderDeetails ${response.body}');
+        // ratingModel.value = orderModel;
+        getOrderDetails();
+        isLoading.value = false;
+      }
+    } catch (e) {
+      isLoading.value = false;
+      debugPrint(e.toString());
+      // Get.snackbar("Order Details", e.toString(),
+      //     colorText: Colors.black,
+      //     backgroundColor: Colors.white54
+      // );
+      return false;
+    }
+  }
+
   getOrderDetails() async {
     try {
       isLoading.value = true;
@@ -36,7 +81,7 @@ class OrderDetailsController extends GetxController {
       String? orderID = preferences.getString(ApiStrings.orderID);
 
       String? orderDetailsAPI = ApiEndPoint.getOrderDetails;
-      debugPrint(orderDetailsAPI);
+      // debugPrint(orderDetailsAPI);
 
       Map<String, String> body = {'user_id': userID!, 'order_id': orderID!};
 
@@ -53,7 +98,7 @@ class OrderDetailsController extends GetxController {
 
       if (response.statusCode == 200) {
         // print("Status is corret");
-        // debugPrint('orderDeetails ${response.body}');
+        debugPrint('orderDeetails ${response.body}');
         orderDetailsModel.value = orderModel;
         firstName = orderModel.messages!.status!.address![0].firstName ?? "";
         email = orderModel.messages!.status!.address![0].email ?? "";
@@ -174,7 +219,7 @@ class OrderDetailsController extends GetxController {
       if (response.statusCode == 200 && ratingModel.status! == 200) {
         // print('orderDeetails ${response.body}');
         // ratingModel.value = orderModel;
-        getOrderDetails();
+        await getOrderDetails();
         isLoading.value = false;
       }
     } catch (e) {

@@ -263,6 +263,7 @@ class Address {
 
 class OtherDtl {
   String? orderId;
+  String? status;
   String? bookingDate;
   String? bookingTime;
   String? verifyOtp;
@@ -274,47 +275,51 @@ class OtherDtl {
   int? paidAmount;
   String? technicianId;
 
-  OtherDtl({
-    this.orderId,
-    this.bookingDate,
-    this.bookingTime,
-    this.verifyOtp,
-    this.totalPrice,
-    this.discount,
-    this.gst,
-    this.grandTotal,
-    this.dueAmount,
-    this.paidAmount,
-    this.technicianId,
-  });
+  OtherDtl(
+      {this.orderId,
+      this.status,
+      this.bookingDate,
+      this.bookingTime,
+      this.verifyOtp,
+      this.totalPrice,
+      this.discount,
+      this.gst,
+      this.grandTotal,
+      this.dueAmount,
+      this.paidAmount,
+      this.technicianId});
 
-  factory OtherDtl.fromJson(Map<String, dynamic> json) => OtherDtl(
-        orderId: json["order_id"],
-        bookingDate: json["booking_date"],
-        bookingTime: json["booking_time"],
-        verifyOtp: json["verify_otp"],
-        totalPrice: json["total_price"],
-        discount: json["discount"],
-        gst: json["gst"],
-        grandTotal: json["grand_total"],
-        dueAmount: json["due_amount"],
-        paidAmount: json["paid_amount"],
-        technicianId: json["Technician_id"],
-      );
+  OtherDtl.fromJson(Map<String, dynamic> json) {
+    orderId = json['order_id'];
+    status = json['status'];
+    bookingDate = json['booking_date'];
+    bookingTime = json['booking_time'];
+    verifyOtp = json['verify_otp'];
+    totalPrice = json['total_price'];
+    discount = json['discount'];
+    gst = json['gst'];
+    grandTotal = json['grand_total'];
+    dueAmount = json['due_amount'];
+    paidAmount = json['paid_amount'];
+    technicianId = json['Technician_id'];
+  }
 
-  Map<String, dynamic> toJson() => {
-        "order_id": orderId,
-        "booking_date": bookingDate,
-        "booking_time": bookingTime,
-        "verify_otp": verifyOtp,
-        "total_price": totalPrice,
-        "discount": discount,
-        "gst": gst,
-        "grand_total": grandTotal,
-        "due_amount": dueAmount,
-        "paid_amount": paidAmount,
-        "Technician_id": technicianId,
-      };
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['order_id'] = this.orderId;
+    data['status'] = this.status;
+    data['booking_date'] = this.bookingDate;
+    data['booking_time'] = this.bookingTime;
+    data['verify_otp'] = this.verifyOtp;
+    data['total_price'] = this.totalPrice;
+    data['discount'] = this.discount;
+    data['gst'] = this.gst;
+    data['grand_total'] = this.grandTotal;
+    data['due_amount'] = this.dueAmount;
+    data['paid_amount'] = this.paidAmount;
+    data['Technician_id'] = this.technicianId;
+    return data;
+  }
 }
 
 class Rattingdetail {

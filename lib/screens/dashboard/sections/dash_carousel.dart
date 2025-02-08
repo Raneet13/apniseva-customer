@@ -40,7 +40,7 @@ class DashCarousel extends StatelessWidget {
                 List<OfferDtl>? data = getData;
                 return Container(
                   width: width,
-                  margin: const EdgeInsets.symmetric(horizontal: 1),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
                   padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,

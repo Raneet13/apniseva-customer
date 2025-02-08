@@ -21,6 +21,7 @@ class DashController extends GetxController {
     String? cityID = pref.getString(ApiStrings.cityID);
     String? userID = pref.getString(ApiStrings.userID);
     print(userID);
+    print(cityID);
     String? dashApi = ApiEndPoint.getDash;
 
     Map<String, String> body = {"user_id": userID!, "city_id": cityID!};
