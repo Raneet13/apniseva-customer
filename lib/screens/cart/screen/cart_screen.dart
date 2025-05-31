@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../background/background_service.dart';
 import '../../../utils/buttons.dart';
 import '../cart_sections/apply_coupon.dart';
 import '../cart_sections/apply_gstbill.dart';
@@ -44,14 +45,14 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> refresh() async {
     return Future.delayed(Duration.zero, () {
-      cartController.getCartData();
+      cartController..getCartData()..applyCoupon();
     });
   }
 
   void openCheckout() async {
     var options = {
       'key': cartController.razorPayKey,
-      "amount": int.parse(cartController.cartTtalAmount.toString()) * 100,
+      "amount": int.parse(cartController.cartTtalAmount.toString()) * 100,//
       "currency": "INR",
       'name': cartController.firstName,
       'description': cartController.userId.toString(),
@@ -62,7 +63,12 @@ class _CartScreenState extends State<CartScreen> {
     };
 
     try {
+      await initialService();
       _razorpay.open(options);
+    //     Future.delayed(Duration.zero, () {
+    //   cartController.checkOut();
+    //   refresh();
+    // });
     } catch (e) {
       print(e);
     }
@@ -71,25 +77,42 @@ class _CartScreenState extends State<CartScreen> {
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
     cartController.paid_amount = int.parse(cartController.price![0]);
     cartController.payment_id = response.paymentId.toString();
-    Fluttertoast.showToast(msg: "SUCESS");
+    // setState(() {
+       cartController.paid_amount = int.parse(cartController.price![0]);
+    cartController.payment_id = response.paymentId.toString();
+    // });
+    // Fluttertoast.showToast(msg: "SUCESS");
     // Fluttertoast.showToast(
     //     msg:
     //         "SUCCESS: price:${cartController.price![0]}, paymentID${response.paymentId.toString()}");
     // Fluttertoast.showToast(msg: "SUCCESS: ");
+    // print(cartController.payment_id);
     Future.delayed(Duration.zero, () {
       cartController.checkOut();
       refresh();
     });
+    stopBackgroundService();
     Fluttertoast.showToast(msg: "SUCCESS: ");
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
+    stopBackgroundService();
     Fluttertoast.showToast(msg: "ERROR: ${response.code}");
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
+    stopBackgroundService();
     Fluttertoast.showToast(msg: "EXTERNAL_WALLET: ");
   }
+  //  @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     //  _razorpay = Razorpay();
+  //   _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+  //   _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+  //   _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  //   }
+  // }
 
   @override
   void dispose() {

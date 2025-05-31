@@ -111,7 +111,7 @@ class CartController extends GetxController {
       dateController.text = DateFormat('dd-MM-yyyy')
           .format(DateTime.now()); //datetime when cart load
       timeController.text = DateFormat('hh:mm a').format(DateTime.now());
-      // print("addressID:${addressIDPref}");
+      debugPrint("userId:${userID} & city_id:${cityID}");
       addressID = addressIDPref;
 
       String? cartAPI = ApiEndPoint.cartDetails;
@@ -298,7 +298,6 @@ class CartController extends GetxController {
     print(gstTextController.text);
     fetch.value = false;
   }
-
   checkOut() async {
     CheckOutDataModel checkOutModel = CheckOutDataModel();
 

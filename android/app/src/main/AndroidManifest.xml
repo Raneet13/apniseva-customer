@@ -4,17 +4,21 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" /> -->
     <!-- <uses-permission android:name="android.permission.USE_EXACT_ALARM" /> -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
-    />  <!-- FOR ANDROID 13  -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <application
-        android:label="Apniseva"
+        android:label="apniseva"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"
+        android:allowBackup="true"
+        android:supportsRtl="true"
+        android:hardwareAccelerated="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
+            android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -39,5 +43,24 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:enabled="true"
+            android:exported="true"
+            android:foregroundServiceType="location|microphone"/>
+            
     </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+    
+
 </manifest>
