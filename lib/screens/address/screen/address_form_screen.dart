@@ -107,7 +107,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                         controller: addressController.firstName,
                         validator: (value) {
                           if (addressController.firstName.text.isEmpty) {
-                            return 'Fill you name';
+                            return 'Fill your name';
                           } else {
                             return null;
                           }
@@ -131,7 +131,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                         hintText: 'Kumar',
                         validator: (value) {
                           if (addressController.lastName.text.isEmpty) {
-                            return 'Fill you Last name';
+                            return 'Fill your Last name';
                           } else {
                             return null;
                           }
@@ -149,7 +149,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (addressController.email.text.isEmpty) {
-                    return 'Fill you Email';
+                    return 'Fill your Email';
                   } else {
                     if (!RegExp(
                             r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
@@ -168,7 +168,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                 controller: addressController.phone,
                 validator: (value) {
                   if (addressController.phone.text.isEmpty) {
-                    return 'Fill you Mobile Number';
+                    return 'Fill your Mobile Number';
                   } else {
                     if (!RegExp(r'^[0-9]+$').hasMatch(value!) ||
                         value.length != 10) {
@@ -287,11 +287,11 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                 maxInputNumber: 6,
                 validator: (value) {
                   if (addressController.pinCode.text.isEmpty) {
-                    return 'Fill you Pin-Code';
+                    return 'Fill your Pin-Code';
                   } else {
                     if (!RegExp(r'^[0-9]+$').hasMatch(value!) ||
                         value.length != 6) {
-                      return 'Enter a correct Mobile Number';
+                      return 'Enter a correct Pin-Code';
                     } else {
                       return null;
                     }
