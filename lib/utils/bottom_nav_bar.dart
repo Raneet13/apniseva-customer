@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:badges/badges.dart' as badges;
+import 'package:badges/badges.dart' as badges;
 import '../controller/cart_controller/cart_controller.dart';
 import '../main.dart';
 import '../screens/cart/screen/cart_screen.dart';
@@ -219,7 +220,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
         inactiveColorPrimary: Colors.grey.shade400,
       ),
       PersistentBottomNavBarItem(
-        
         icon: Obx(
           () => cartController.fetch.value == true &&
                   cartController.cartDetailsDataModel.value.status == 400
