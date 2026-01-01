@@ -1,6 +1,4 @@
-import 'package:apniseva/screens/orders/order_widget/order_strings.dart';
 import 'package:flutter/material.dart';
-
 
 class AcceptOrderButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -8,9 +6,10 @@ class AcceptOrderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height - (MediaQuery.of(context).padding.bottom + MediaQuery.of(context).padding.top);
+    double height = MediaQuery.of(context).size.height -
+        (MediaQuery.of(context).padding.bottom +
+            MediaQuery.of(context).padding.top);
 
     return GestureDetector(
       onTap: onPressed,
@@ -19,21 +18,18 @@ class AcceptOrderButton extends StatelessWidget {
         width: 65,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(5.0)
-        ),
-
-        child: Text(OrderButtonString.orderAccept,
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.circular(5.0)),
+        child: Text(
+          "Accept",
           style: TextStyle(
-            fontSize: Theme.of(context).textTheme.titleSmall!.fontSize,
-            color: Colors.white
-          ),
+              fontSize: Theme.of(context).textTheme.titleSmall!.fontSize,
+              color: Colors.white),
         ),
       ),
     );
   }
 }
-
 
 class RejectOrderButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -48,15 +44,12 @@ class RejectOrderButton extends StatelessWidget {
         width: 65,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(5.0)
-        ),
-
-        child: Text(OrderButtonString.orderReject,
+            color: Colors.red, borderRadius: BorderRadius.circular(5.0)),
+        child: Text(
+          "Reject",
           style: TextStyle(
               fontSize: Theme.of(context).textTheme.titleSmall!.fontSize,
-              color: Colors.white
-          ),
+              color: Colors.white),
         ),
       ),
     );

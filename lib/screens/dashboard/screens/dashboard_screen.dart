@@ -114,10 +114,102 @@ class _DashScreenState extends State<DashScreen> {
                       //   getTestimonialDetail: dashController.dashDataModel.value
                       //       .messages!.status!.testimonialDtl!,
                       // )
+                      SizedBox(height: height * 0.02),
+                      _buildFooterBrand(context),
                     ],
                   ),
                 )),
       );
     });
+  }
+
+  Widget _buildFooterBrand(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Image.asset(
+              "assets/images/odisha_image.png",
+              height: 150,
+              width: 150,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Odisha's Own",
+                style: TextStyle(
+                  fontSize: 38,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFFD6D6D6),
+                  height: 1.0,
+                  letterSpacing: -1.5,
+                  fontFamily:
+                      'Inter', // Try to use a nice font if available, or fallback
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    "app",
+                    style: TextStyle(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFFD6D6D6),
+                      height: 1.0,
+                      letterSpacing: -1.5,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.favorite_rounded,
+                      color: Color(0xFFFF5E5E),
+                      size: 34,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+              Container(
+                height: 2,
+                width: 60,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEEEEE),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "apniseva",
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFFE0E0E0),
+                  letterSpacing: -1.0,
+                  fontFamily: 'Inter',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

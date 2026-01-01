@@ -1,6 +1,7 @@
-import 'package:apniseva/screens/cart/cart_strings/cart_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:remixicon/remixicon.dart';
 
 import '../../../controller/cart_controller/cart_controller.dart';
 
@@ -18,165 +19,119 @@ class _ApplyGstbillState extends State<ApplyGstbill> {
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height -
-        (MediaQuery.of(context).padding.bottom +
-            MediaQuery.of(context).padding.top);
-
-    // return Obx(() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: ExpansionTile(
-        dense: true,
-        backgroundColor: Colors.grey.shade200,
-        collapsedBackgroundColor: Colors.grey.shade200,
-        title: Text(
-          "Do You Want GST Bill",
-          style: Theme.of(context).textTheme.labelLarge,
-        ),
-        children: [
-          Container(
-            width: width,
-            padding: EdgeInsets.symmetric(vertical: height * 0.01),
-            child: Column(
-              children: [
-                Card(
-                  elevation: 1.5,
-                  color: Colors.grey.shade100,
-                  child: Container(
-                    width: width,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Text(
-                            CartStrings.gstno,
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                        ),
-                        TextFormField(
-                          controller: couponController.gstTextController,
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight
-                                  .bold), //Theme.of(context).textTheme.titleLarge,
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            Future.delayed(Duration.zero, () {
-                              couponController.applyGst();
-                            });
-                          },
-                          child: Text(CartStrings.applygst),
-                        ),
-                        SizedBox(
-                          height: height * 0.03,
-                        ),
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //   children: [
-                        //     Text(
-                        //       CartStrings.subTotal,
-                        //       style: Theme.of(context).textTheme.titleLarge,
-                        //     ),
-                        //     Text(
-                        //       '₹ ${couponController.couponDataModel.value.messages!.status!.totalAmount!.total}',
-                        //       style: Theme.of(context).textTheme.labelMedium,
-                        //     )
-                        //   ],
-                        // ),
-                        // const Divider(
-                        //   thickness: 1.0,
-                        // ),
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //   children: [
-                        //     Text(
-                        //       CartStrings.couponApplied,
-                        //       style: Theme.of(context).textTheme.titleLarge,
-                        //     ),
-                        //     Text(
-                        //       '₹ ${couponController.couponDataModel.value.messages!.status!.couponDetails!.couponAmount}',
-                        //       style: Theme.of(context).textTheme.labelMedium,
-                        //     )
-                        //   ],
-                        // ),
-                        // const Divider(
-                        //   thickness: 1.0,
-                        // ),
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //   children: [
-                        //     Text(
-                        //       CartStrings.gst,
-                        //       style: Theme.of(context).textTheme.titleLarge,
-                        //     ),
-                        //     Text(
-                        //       "₹ ${couponController.couponDataModel.value.messages!.status!.gst!.gstAmount!}",
-                        //       style: Theme.of(context).textTheme.labelMedium,
-                        //     )
-                        //   ],
-                        // ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: height * 0.01),
-                // Card(
-                //   elevation: 1.5,
-                //   color: Colors.grey.shade100,
-                //   child: Container(
-                //     width: width,
-                //     height: 47,
-                //     padding: const EdgeInsets.symmetric(horizontal: 10),
-                //     child: Row(
-                //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //       children: [
-                //         Text(
-                //           CartStrings.total,
-                //           style: Theme.of(context).textTheme.labelLarge,
-                //         ),
-                //         Text(
-                //           "₹ ${couponController.couponDataModel.value.messages!.status!.totalAmount!.grandTotal}",
-                //           style: Theme.of(context).textTheme.headlineMedium,
-                //         )
-                //       ],
-                //     ),
-                //   ),
-                // ),
-
-                SizedBox(height: height * 0.01),
-              ],
-            ),
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.grey.shade100, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
-          // Card(
-          //   elevation: 1.5,
-          //   color: Colors.grey.shade100,
-          //   child: Container(
-          //     width: width,
-          //     height: 47,
-          //     padding: const EdgeInsets.symmetric(horizontal: 10),
-          //     child: Row(
-          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //       children: [
-          //         Text(
-          //           CartStrings.total,
-          //           style: Theme.of(context).textTheme.labelLarge,
-          //         ),
-          //         Text(
-          //           "₹ ${couponController.couponDataModel.value.messages!.status!.totalAmount!.grandTotal}",
-          //           style: Theme.of(context).textTheme.headlineMedium,
-          //         )
-          //       ],
-          //     ),
-          //   ),
-          // ),
         ],
       ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blueGrey.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Remix.government_line,
+                color: Colors.blueGrey.shade600, size: 20),
+          ),
+          title: Text(
+            "GST Billing (Optional)",
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Colors.blueGrey.shade800,
+            ),
+          ),
+          iconColor: Colors.blueGrey.shade400,
+          collapsedIconColor: Colors.blueGrey.shade300,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Enter your business GST number for tax benefits.",
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.blueGrey.shade400,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.grey.shade100),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: couponController.gstTextController,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blueGrey.shade900,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: "GST Number",
+                            hintStyle: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Colors.blueGrey.shade300,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Future.delayed(Duration.zero, () {
+                            couponController.applyGst();
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueGrey.shade700,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text(
+                          "Apply",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
-    // });
   }
 }

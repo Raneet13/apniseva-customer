@@ -1,12 +1,10 @@
 import 'package:apniseva/controller/order_details_controller/order_details_controller.dart';
 import 'package:apniseva/utils/color.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,11 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../controller/cart_controller/cart_controller.dart';
 import '../../../utils/api_strings/api_strings.dart';
 import '../../../utils/input_field.dart';
-import '../../cart/cart_sections/cart_order_schedule.dart';
-import '../../cart/cart_strings/cart_strings.dart';
+
 import '../../profile/profile_sections/profile_app_bar.dart';
 import '../order_details_model/order_details_model.dart';
-import '../order_widget/order_strings.dart';
 
 class OrderBookingDetails extends StatefulWidget {
   String status;
@@ -39,18 +35,11 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
     Future.delayed(Duration.zero, () {
       orderDetailsController.getOrderDetails();
     });
-    _razorpay = Razorpay();
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
     super.initState();
   }
-
-  // Future<void> refresh() async {
-  //   return Future.delayed(Duration.zero, () {
-  //     cartController.getCartData();
-  //   });
-  // }
 
   void additionalPayment() async {
     var options = {
@@ -71,7 +60,7 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
     try {
       _razorpay.open(options);
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -79,39 +68,26 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
     orderDetailsController.payAmount = orderDetailsController
         .orderDetailsModel.value.messages!.status!.otherDtl!.dueAmount;
     orderDetailsController.paymentId = response.paymentId.toString();
-    // Fluttertoast.showToast(
-    //     msg: "SUCCESS:paymentID${response.paymentId.toString()}");
-    // Fluttertoast.showToast(msg: "SUCCESS: ");
     Future.delayed(Duration.zero, () {
       orderDetailsController.aditionalPayment();
     });
-    Fluttertoast.showToast(msg: "SUCCESS: ");
+    Fluttertoast.showToast(msg: "Payment Successful");
     refresh();
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
-    Fluttertoast.showToast(msg: "ERROR: ${response.code}");
+    Fluttertoast.showToast(msg: "Payment Failed: ${response.code}");
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
-    Fluttertoast.showToast(msg: "EXTERNAL_WALLET: ");
+    Fluttertoast.showToast(msg: "External Wallet: ${response.walletName}");
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
-
-    super.dispose();
     _razorpay.clear();
+    super.dispose();
   }
-
-  // @override
-  // void initState() {
-  //   Future.delayed(Duration.zero, () {
-  //     orderDetailsController.getOrderDetails();
-  //   });
-  //   super.initState();
-  // }
 
   Future<void> refresh() async {
     return Future.delayed(Duration.zero, () {
@@ -121,515 +97,410 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
 
   @override
   Widget build(BuildContext context) {
-    // double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height -
-        (MediaQuery.of(context).padding.bottom +
-            MediaQuery.of(context).padding.top);
-
     return Obx(() {
+      final isLoading = orderDetailsController.isLoading.value;
+      if (isLoading) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFFBFBFE),
+          appBar: PrimaryAppBar(title: "Booking Details"),
+          body: Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: primaryColor,
+            ),
+          ),
+        );
+      }
+
+      final statusData =
+          orderDetailsController.orderDetailsModel.value.messages?.status;
+      if (statusData == null) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFFBFBFE),
+          appBar: PrimaryAppBar(title: "Booking Details"),
+          body: Center(
+            child: Text(
+              "Booking details not found",
+              style: GoogleFonts.poppins(color: Colors.blueGrey),
+            ),
+          ),
+        );
+      }
+
+      final otherDtl = statusData.otherDtl!;
+
       return Scaffold(
-        appBar: PrimaryAppBar(
-          title: OrdersDetailStrings.title,
+        backgroundColor: const Color(0xFFFBFBFE),
+        appBar: PrimaryAppBar(title: "Booking Details"),
+        body: RefreshIndicator(
+          onRefresh: refresh,
+          color: primaryColor,
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            children: [
+              _buildHeader(otherDtl),
+              const SizedBox(height: 24),
+              _buildServiceDetails(statusData),
+              const SizedBox(height: 24),
+              if (statusData.additinalOrders != null &&
+                  statusData.additinalOrders!.isNotEmpty) ...[
+                _buildAdditionalOrders(statusData),
+                const SizedBox(height: 24),
+              ],
+              _buildBillSummary(otherDtl),
+              const SizedBox(height: 24),
+              AddressDetails(getAddress: statusData.address),
+              const SizedBox(height: 24),
+              OrderSchedule(getOrderSchedule: otherDtl),
+              const SizedBox(height: 24),
+              if (otherDtl.status == "5") ...[
+                const RateAndReview(),
+                const SizedBox(height: 48),
+              ],
+            ],
+          ),
         ),
-        body: orderDetailsController.isLoading.value == true
-            ? Center(
-                child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: Theme.of(context).primaryColor,
-              ))
-            : RefreshIndicator(
-                onRefresh: refresh,
-                color: Theme.of(context).primaryColor,
-                strokeWidth: 2.0,
-                child: ListView(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 10.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // OrderID
-                              RichText(
-                                  text: TextSpan(children: [
-                                TextSpan(
-                                  text: OrdersDetailStrings.orderID,
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                TextSpan(
-                                  text: orderDetailsController
-                                      .orderDetailsModel
-                                      .value
-                                      .messages!
-                                      .status!
-                                      .otherDtl!
-                                      .orderId,
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                )
-                              ])),
-//                               SizedBox(height: height * 0.005),
-// //datetime solve
-                              Text(
-                                // "${DateFormat('yyyy-MMMM-dd').format(orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.bookingDate!)}",
-                                // ${DateFormat('hh:mm:ss a').parse(orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.bookingTime!.toString())}
-                                orderDetailsController.orderDetailsModel.value
-                                    .messages!.status!.otherDtl!.bookingDate!
-                                    .toString(),
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                            ],
-                          ),
-                          orderDetailsController.orderDetailsModel.value
-                                      .messages!.status!.otherDtl!.verifyOtp !=
-                                  null
-                              ? Container(
-                                  // height: 50,
-                                  width: 80,
-                                  padding: const EdgeInsets.all(5.0),
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(8)),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        'OTP',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineMedium,
-                                      ),
-                                      Text(
-                                        orderDetailsController
-                                                    .orderDetailsModel
-                                                    .value
-                                                    .messages!
-                                                    .status!
-                                                    .otherDtl!
-                                                    .verifyOtp ==
-                                                '1'
-                                            ? "Verified"
-                                            : orderDetailsController
-                                                .orderDetailsModel
-                                                .value
-                                                .messages!
-                                                .status!
-                                                .otherDtl!
-                                                .verifyOtp!,
-                                        style: TextStyle(
-                                          fontSize: Theme.of(context)
-                                              .textTheme
-                                              .headlineMedium!
-                                              .fontSize,
-                                          color: Theme.of(context).primaryColor,
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                )
-                              : const SizedBox()
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: height * 0.045),
-
-                    // HeadLine
-                    const ProductHeader(),
-                    Column(
-                      children: [
-                        ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: orderDetailsController.orderDetailsModel
-                                .value.messages!.status!.allOrders!.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              List<AllOrder>? allOrders = orderDetailsController
-                                  .orderDetailsModel
-                                  .value
-                                  .messages!
-                                  .status!
-                                  .allOrders!;
-                              return Row(
-                                children: [
-                                  Expanded(
-                                      child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10.0, vertical: 4.0),
-                                    child: Text(
-                                      allOrders[index].productName!,
-                                      textAlign: TextAlign.start,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelLarge,
-                                    ),
-                                  )),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(4.0),
-                                      child: Text(
-                                        allOrders[index].qty!,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(4.0),
-                                      child: Text(
-                                        "₹ ${allOrders[index].price!}",
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelMedium,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }),
-                      ],
-                    ),
-
-                    Visibility(
-                        visible: orderDetailsController.orderDetailsModel.value
-                                .messages!.status!.additinalOrders!.isEmpty
-                            ? false
-                            : true,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Column(
-                            // crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: double.maxFinite,
-                                color: Colors.grey.shade200,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8.0),
-                                child: Text(
-                                  'Additional Products',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium!
-                                          .fontSize,
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium!
-                                          .color),
-                                ),
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text("Product"),
-                                  Text("Quantity"),
-                                  Text("Price")
-                                ],
-                              ),
-                              ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: orderDetailsController
-                                      .orderDetailsModel
-                                      .value
-                                      .messages!
-                                      .status!
-                                      .additinalOrders!
-                                      .length,
-                                  itemBuilder:
-                                      (BuildContext context, int index) {
-                                    return Row(
-                                      children: [
-                                        Expanded(
-                                            child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10.0, vertical: 4.0),
-                                          child: Text(
-                                            orderDetailsController
-                                                .orderDetailsModel
-                                                .value
-                                                .messages!
-                                                .status!
-                                                .additinalOrders![index]
-                                                .productName!,
-                                            textAlign: TextAlign.start,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelLarge,
-                                          ),
-                                        )),
-                                        Expanded(
-                                            child: Padding(
-                                          padding: const EdgeInsets.all(4.0),
-                                          child: Text(
-                                            "${orderDetailsController.orderDetailsModel.value.messages!.status!.additinalOrders![index].qty!}",
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelLarge,
-                                          ),
-                                        )),
-                                        Expanded(
-                                            child: Padding(
-                                          padding: const EdgeInsets.all(4.0),
-                                          child: Text(
-                                            "₹ ${orderDetailsController.orderDetailsModel.value.messages!.status!.additinalOrders![index].price!}",
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelLarge,
-                                          ),
-                                        )),
-                                      ],
-                                    );
-                                  }),
-                              orderDetailsController.orderDetailsModel.value
-                                          .messages!.status!.otherDtl!.status !=
-                                      "2"
-                                  ? SizedBox()
-                                  : Padding(
-                                      padding: const EdgeInsets.only(right: 20),
-                                      child: Align(
-                                          alignment: Alignment.center,
-                                          child: TextButton(
-                                              onPressed: () =>
-                                                  orderDetailsController
-                                                      .aceptAdditionalBill(),
-                                              //additionalPayment(), //orderDetailsController
-                                              //.aditionalPayment(), //additionalPayment(),
-                                              style: ButtonStyle(
-                                                  backgroundColor:
-                                                      MaterialStatePropertyAll(
-                                                          primaryColor
-                                                              .withOpacity(
-                                                                  0.8)),
-                                                  padding:
-                                                      MaterialStatePropertyAll(
-                                                          EdgeInsets.all(5)),
-                                                  shape: MaterialStateProperty.all(
-                                                      RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10)))),
-                                              child: Text(
-                                                "Acept All Additinal Bill",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  decoration:
-                                                      TextDecoration.none,
-                                                  fontSize: 16,
-                                                ),
-                                              ))),
-                                    ),
-                              SizedBox(
-                                height: height * 0.01,
-                              ),
-                            ],
-                          ),
-                        )),
-                    const Divider(
-                      thickness: 1.0,
-                    ),
-
-                    // Transaction Details
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                            child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              OrdersDetailStrings.totalPrice,
-                              style: Theme.of(context).textTheme.labelLarge,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            Text(
-                              OrdersDetailStrings.discount,
-                              style: Theme.of(context).textTheme.labelLarge,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            Text(
-                              OrdersDetailStrings.gst,
-                              style: Theme.of(context).textTheme.labelLarge,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            FittedBox(
-                              child: Text(
-                                OrdersDetailStrings.grandTotal,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                            ),
-                            SizedBox(height: height * 0.01),
-                            FittedBox(
-                              child: Text(
-                                OrdersDetailStrings.dueAmount,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                            ),
-                            SizedBox(height: height * 0.01),
-                            FittedBox(
-                              child: Text(
-                                OrdersDetailStrings.paidAmount,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                            )
-                          ],
-                        )),
-                        Expanded(
-                            child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              '₹ ${orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.totalPrice.toString()}',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            Text(
-                              '₹ ${orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.discount.toString()}',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            Text(
-                              '₹ ${orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.gst}',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            Text(
-                              '₹ ${orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.grandTotal.toString()}',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            Text(
-                              '₹ ${orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.dueAmount.toString()}',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            SizedBox(height: height * 0.01),
-                            Text(
-                              '₹ ${orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.paidAmount.toString()}',
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                          ],
-                        )),
-                      ],
-                    ),
-                    orderDetailsController.orderDetailsModel.value.messages!
-                                    .status!.otherDtl!.dueAmount ==
-                                0 ||
-                            orderDetailsController.orderDetailsModel.value
-                                    .messages!.status!.otherDtl!.dueAmount ==
-                                null
-                        ? SizedBox()
-                        : Padding(
-                            padding: const EdgeInsets.only(right: 20),
-                            child: Align(
-                                alignment: Alignment.bottomRight,
-                                child: TextButton(
-                                    onPressed: () => additionalPayment(),
-                                    //additionalPayment(), //orderDetailsController
-                                    //.aditionalPayment(), //additionalPayment(),
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStatePropertyAll(
-                                                primaryColor.withOpacity(0.8)),
-                                        padding: MaterialStatePropertyAll(
-                                            EdgeInsets.all(5)),
-                                        shape: MaterialStateProperty.all(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        10)))),
-                                    child: Text(
-                                      "PAY ₹${orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.dueAmount.toString()}",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        decoration: TextDecoration.none,
-                                        fontSize: 16,
-                                      ),
-                                    ))),
-                          ),
-                    SizedBox(
-                      height: height * 0.04,
-                    ),
-
-                    AddressDetails(
-                        getAddress: orderDetailsController.orderDetailsModel
-                            .value.messages!.status!.address!),
-
-                    OrderSchedule(
-                        getOrderSchedule: orderDetailsController
-                            .orderDetailsModel
-                            .value
-                            .messages!
-                            .status!
-                            .otherDtl!),
-                    SizedBox(
-                      height: height * 0.04,
-                    ),
-                    orderDetailsController.orderDetailsModel.value.messages!
-                                .status!.otherDtl!.status ==
-                            "5"
-                        ? RateAndReview()
-                        : SizedBox(),
-                    SizedBox(
-                      height: height * 0.05,
-                    ),
-                  ],
-                ),
-              ),
       );
     });
   }
-}
 
-class ProductHeader extends StatelessWidget {
-  const ProductHeader({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHeader(OtherDtl otherDtl) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
-      color: Colors.grey.shade200,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          //Service
-          Expanded(
-            child: Text(
-              OrdersDetailStrings.service,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Order ID",
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.blueGrey.shade400,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    otherDtl.orderId ?? "",
+                    style: GoogleFonts.outfit(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.blueGrey.shade900,
+                    ),
+                  ),
+                ],
+              ),
+              if (otherDtl.verifyOtp != null)
+                _buildOtpBadge(otherDtl.verifyOtp!),
+            ],
           ),
-          //Quantity
-          Expanded(
-            child: Text(
-              OrdersDetailStrings.quantity,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(Remix.calendar_check_line,
+                  size: 16, color: Colors.blueGrey.shade300),
+              const SizedBox(width: 8),
+              Text(
+                otherDtl.bookingDate ?? "",
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: Colors.blueGrey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
+        ],
+      ),
+    );
+  }
 
-          // Price
-          Expanded(
-            child: Text(
-              OrdersDetailStrings.price,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium,
+  Widget _buildOtpBadge(String otp) {
+    final isVerified = otp == '1';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: isVerified
+            ? Colors.green.withOpacity(0.08)
+            : primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isVerified
+                ? Colors.green.withOpacity(0.1)
+                : primaryColor.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            "OTP",
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: isVerified ? Colors.green : primaryColor,
+              letterSpacing: 1,
+            ),
+          ),
+          Text(
+            isVerified ? "VERIFIED" : otp,
+            style: GoogleFonts.outfit(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: isVerified ? Colors.green : primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceDetails(Status status) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        children: [
+          _buildSectionHeader(Remix.service_line, "Booked Services"),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: status.allOrders!.length,
+            separatorBuilder: (context, index) => const Divider(
+                height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
+            itemBuilder: (context, index) {
+              final order = status.allOrders![index];
+              return ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                title: Text(
+                  order.productName ?? "",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueGrey.shade900,
+                  ),
+                ),
+                subtitle: Text(
+                  "Quantity: ${order.qty}",
+                  style: GoogleFonts.poppins(
+                      fontSize: 12, color: Colors.blueGrey.shade400),
+                ),
+                trailing: Text(
+                  "₹${order.price}",
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blueGrey.shade900,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdditionalOrders(Status status) {
+    const Color orangeOpacity10 = Color(0x1AFF9800);
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.orange.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          _buildSectionHeader(Remix.add_circle_line, "Additional Services",
+              iconColor: Colors.orange),
+          Divider(height: 1, thickness: 1, color: orangeOpacity10),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: status.additinalOrders!.length,
+            separatorBuilder: (context, index) =>
+                Divider(height: 1, thickness: 1, color: orangeOpacity10),
+            itemBuilder: (context, index) {
+              final order = status.additinalOrders![index];
+              return ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                title: Text(
+                  order.productName ?? "",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueGrey.shade900,
+                  ),
+                ),
+                trailing: Text(
+                  "₹${order.price}",
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blueGrey.shade900,
+                  ),
+                ),
+              );
+            },
+          ),
+          if (status.otherDtl?.status == "2")
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ElevatedButton(
+                onPressed: () => orderDetailsController.aceptAdditionalBill(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(
+                  "Accept Additional Bill",
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBillSummary(OtherDtl otherDtl) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildSectionHeader(Remix.bill_line, "Bill Summary"),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                _buildSummaryRow("Total Price", "₹${otherDtl.totalPrice}"),
+                const SizedBox(height: 12),
+                _buildSummaryRow("Discount", "-₹${otherDtl.discount}",
+                    isDiscount: true),
+                const SizedBox(height: 12),
+                _buildSummaryRow("GST", "₹${otherDtl.gst}"),
+                const SizedBox(height: 16),
+                const Divider(
+                    height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
+                const SizedBox(height: 16),
+                _buildSummaryRow("Grand Total", "₹${otherDtl.grandTotal}",
+                    isBold: true),
+                const SizedBox(height: 12),
+                _buildSummaryRow("Paid Amount", "₹${otherDtl.paidAmount}",
+                    color: Colors.green),
+                if (otherDtl.dueAmount != null &&
+                    double.tryParse(otherDtl.dueAmount.toString()) != null &&
+                    double.parse(otherDtl.dueAmount.toString()) > 0) ...[
+                  const SizedBox(height: 12),
+                  _buildSummaryRow("Due Amount", "₹${otherDtl.dueAmount}",
+                      color: Colors.red, isBold: true),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () => additionalPayment(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: Text(
+                      "Pay Pending Amount",
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value,
+      {bool isDiscount = false, bool isBold = false, Color? color}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: isBold ? 15 : 14,
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+            color: isBold ? Colors.blueGrey.shade900 : Colors.blueGrey.shade500,
+          ),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            fontSize: isBold ? 18 : 16,
+            fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+            color:
+                color ?? (isDiscount ? Colors.green : Colors.blueGrey.shade900),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, String title, {Color? iconColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: (iconColor ?? primaryColor).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor ?? primaryColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Colors.blueGrey.shade800,
             ),
           ),
         ],
@@ -640,69 +511,60 @@ class ProductHeader extends StatelessWidget {
 
 class AddressDetails extends StatelessWidget {
   final List<Address>? getAddress;
-  const AddressDetails({
-    Key? key,
-    this.getAddress,
-  }) : super(key: key);
+  const AddressDetails({Key? key, this.getAddress}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    if (getAddress == null || getAddress!.isEmpty) return const SizedBox();
+    final address = getAddress![0];
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.grey.shade100),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.maxFinite,
-              padding:
-                  const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
-              // color: Colors.grey.shade50,
-              child: Text(
-                'Address Details',
-                style: TextStyle(
-                    fontSize:
-                        Theme.of(context).textTheme.headlineMedium!.fontSize,
-                    color: Theme.of(context).textTheme.titleLarge!.color),
-              ),
-            ),
-            const Divider(
-              height: 0,
-            ),
+            _buildSectionHeader(Remix.map_pin_2_line, "Service Address"),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    getAddress![0].firstName!,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  Text(
-                    getAddress![0].number!,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  Text(
-                    getAddress![0].email!,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  Text(
-                    getAddress![0].address1!,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  Text(
-                    getAddress![0].adress2!,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  Text(
-                    getAddress![0].state!,
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  Text(
-                    getAddress![0].pincode!,
-                    style: Theme.of(context).textTheme.labelMedium,
+                  _buildAddressRow(Remix.user_3_line, address.firstName ?? ""),
+                  const SizedBox(height: 12),
+                  _buildAddressRow(Remix.phone_line, address.number ?? ""),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Remix.home_4_line,
+                          size: 18, color: Colors.blueGrey.shade300),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "${address.address1}, ${address.adress2}, ${address.state} - ${address.pincode}",
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.blueGrey.shade600,
+                            fontWeight: FontWeight.w500,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -710,6 +572,50 @@ class AddressDetails extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(IconData icon, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: primaryColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Colors.blueGrey.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressRow(IconData icon, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.blueGrey.shade300),
+        const SizedBox(width: 12),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: Colors.blueGrey.shade700,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -725,210 +631,251 @@ class OrderSchedule extends StatefulWidget {
 class _OrderScheduleState extends State<OrderSchedule> {
   final cartController = Get.put(CartController());
   final orderDetailsController = Get.put(OrderDetailsController());
+
   Future<void> refresh() async {
     return Future.delayed(Duration.zero, () {
       orderDetailsController.getOrderDetails();
     });
   }
 
-  orderReschedule() {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height -
-        (MediaQuery.of(context).padding.bottom +
-            MediaQuery.of(context).padding.top);
+  void orderReschedule() {
     showModalBottomSheet(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(20),
-          ),
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
         ),
-        context: context,
-        builder: (builder) {
-          return Card(
-            elevation: 1.5,
-            color: Colors.grey.shade100,
-            child: Container(
-              width: width,
-              height: height * 0.3,
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: height * 0.03,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      CartStrings.schedule,
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Text(
-                                CartStrings.date,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                            ),
-                            PickerInputField(
-                              pick: 'Date',
-                              hintText: 'Date',
-                              controller: cartController.redateController,
-                              prefixIcon: Remix.calendar_line,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              child: Text(
-                                CartStrings.time,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                            ),
-                            PickerInputField(
-                              pick: 'Time',
-                              hintText: 'Time',
-                              controller: cartController.retimeController,
-                              prefixIcon: Remix.timer_2_line,
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                  SizedBox(
-                    height: height * 0.02,
-                  ),
-                  Center(
-                    child: SizedBox(
-                      height: height * 0.05,
-                      width: width * 0.7,
-                      child: ElevatedButton(
-                          onPressed: () async {
-                            SharedPreferences pref =
-                                await SharedPreferences.getInstance();
-                            pref.setString(
-                                ApiStrings.orderID,
-                                orderDetailsController.orderDetailsModel.value
-                                    .messages!.status!.otherDtl!.orderId!);
-                            // debugPrint(orderDetailsController.orderDetailsModel
-                            //     .value.messages!.status!.otherDtl!.orderId);
-                            await cartController.Reshedule();
-                            Navigator.pop(context);
-                            // Get.back();
-                            refresh();
-                          },
-                          child: Text(
-                            "Schedule",
-                            style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          )),
-                    ),
-                  ),
-                  SizedBox(height: height * 0.01),
-                ],
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          top: 24,
+          left: 24,
+          right: 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          );
-        });
+            const SizedBox(height: 24),
+            Text(
+              "Reschedule Booking",
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Colors.blueGrey.shade900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Choose a new date and time for your service",
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.blueGrey.shade400,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Date",
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.blueGrey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      PickerInputField(
+                        pick: 'Date',
+                        hintText: 'Select Date',
+                        controller: cartController.redateController,
+                        prefixIcon: Remix.calendar_line,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Time",
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.blueGrey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      PickerInputField(
+                        pick: 'Time',
+                        hintText: 'Select Time',
+                        controller: cartController.retimeController,
+                        prefixIcon: Remix.timer_2_line,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () async {
+                SharedPreferences pref = await SharedPreferences.getInstance();
+                pref.setString(
+                    ApiStrings.orderID, widget.getOrderSchedule!.orderId!);
+                await cartController.Reshedule();
+                Navigator.pop(context);
+                refresh();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+              child: Text(
+                "Confirm Schedule",
+                style: GoogleFonts.poppins(
+                    fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final schedule = widget.getOrderSchedule!;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child:
+                          Icon(Remix.time_line, color: primaryColor, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Schedule Info",
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.blueGrey.shade800,
+                      ),
+                    ),
+                  ],
+                ),
+                if (schedule.verifyOtp != '1')
+                  TextButton(
+                    onPressed: orderReschedule,
+                    style: TextButton.styleFrom(
+                      foregroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: Text(
+                      "Reschedule",
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                _buildInfoCol(Remix.calendar_event_line, "Date",
+                    schedule.bookingDate ?? ""),
+                const SizedBox(width: 48),
+                _buildInfoCol(
+                    Remix.time_line, "Time", schedule.bookingTime ?? ""),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCol(IconData icon, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Container(
-              width: double.maxFinite,
-              padding:
-                  const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
-              // color: Colors.grey.shade50,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Schedule At',
-                    style: TextStyle(
-                        fontSize: Theme.of(context)
-                            .textTheme
-                            .headlineMedium!
-                            .fontSize,
-                        color: Theme.of(context).textTheme.titleLarge!.color),
-                  ),
-                  orderDetailsController.orderDetailsModel.value.messages!
-                              .status!.otherDtl!.verifyOtp ==
-                          '1'
-                      ? SizedBox()
-                      : TextButton(
-                          onPressed: () => orderReschedule(),
-                          style: ButtonStyle(
-                              backgroundColor:
-                                  MaterialStatePropertyAll(primaryColor),
-                              padding:
-                                  MaterialStatePropertyAll(EdgeInsets.all(5)),
-                              shape: MaterialStateProperty.all(
-                                  RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10)))),
-                          child: Text(
-                            "Reschedule",
-                            style: TextStyle(
-                              color: Colors.white,
-                              decoration: TextDecoration.none,
-                              fontSize: 16,
-                            ),
-                          ))
-                ],
+            Icon(icon, size: 14, color: Colors.blueGrey.shade300),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.blueGrey.shade400,
+                letterSpacing: 0.5,
               ),
             ),
-            const Divider(
-              height: 0,
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Schedule Date: ${widget.getOrderSchedule!.bookingDate}",
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                  Text(
-                    "Schedule Time: ${widget.getOrderSchedule!.bookingTime}",
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ],
-              ),
-            ),
-            // TextButton.icon(onPressed: (){}, icon: ListView(
-            //   children: [Icon(Icons.star)],
-            // ), label: Text("Give Rate"))
           ],
         ),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: GoogleFonts.outfit(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Colors.blueGrey.shade800,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -942,403 +889,231 @@ class RateAndReview extends StatefulWidget {
 
 class _RateAndReviewState extends State<RateAndReview> {
   final orderDetailsController = Get.put(OrderDetailsController());
+
   Future<void> refresh() async {
     return Future.delayed(Duration.zero, () {
       orderDetailsController.getOrderDetails();
     });
   }
 
-  rateAndREview(context) {
+  void showRatingDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            // backgroundColor: Colors.white,
-            title: Text("Rate technician & ApniSeva Service"),
-
-            titleTextStyle: TextStyle(
-                fontSize: Theme.of(context).textTheme.headlineLarge!.fontSize,
-                fontWeight: FontWeight.bold,
-                color: primaryColor),
-            content: SingleChildScrollView(
-              child: Container(
-                margin: EdgeInsets.only(top: 0, bottom: 0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.maxFinite,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 5.0, horizontal: 8.0),
-                          // color: Colors.grey.shade50,
-                          child: Text(
-                            'Rate Technician',
-                            style: TextStyle(
-                                fontSize: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium!
-                                    .fontSize,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge!
-                                    .color),
-                          ),
-                        ),
-                        const Divider(
-                          height: 0,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 5.0, horizontal: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    "Rate",
-                                    style:
-                                        Theme.of(context).textTheme.labelMedium,
-                                  ),
-                                  RatingBar.builder(
-                                    initialRating: 0,
-                                    minRating: 1,
-                                    direction: Axis.horizontal,
-                                    allowHalfRating: false,
-                                    itemCount: 5,
-                                    itemSize: 30,
-                                    glow: true,
-                                    glowColor: Colors.white,
-                                    itemPadding:
-                                        EdgeInsets.symmetric(horizontal: 4.0),
-                                    itemBuilder: (context, _) => Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                    ),
-                                    onRatingUpdate: (rating) {
-                                      orderDetailsController.rateTechnician =
-                                          rating;
-                                      print(rating);
-                                    },
-                                  )
-                                ],
-                              ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              TextField(
-                                maxLines: 3,
-                                controller: orderDetailsController
-                                    .technicianFeedbackController,
-                                style: TextStyle(fontSize: 13),
-                                decoration: InputDecoration(
-                                    contentPadding: EdgeInsets.only(
-                                        left: 10,
-                                        right: 10,
-                                        top: 15,
-                                        bottom: 5),
-                                    // label: Text("Give your Opnion"),
-                                    // labelText: "",
-                                    // border: OutlineInputBorder(),
-                                    // floatingLabelAlignment:
-                                    //     FloatingLabelAlignment.start,
-                                    floatingLabelBehavior:
-                                        FloatingLabelBehavior.always,
-                                    hintText: "Write Feedback...."),
-                              )
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: double.maxFinite,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 5.0, horizontal: 8.0),
-                          // color: Colors.grey.shade50,
-                          child: Text(
-                            'Rate ApniSeva Service',
-                            style: TextStyle(
-                                fontSize: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium!
-                                    .fontSize,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge!
-                                    .color),
-                          ),
-                        ),
-                        const Divider(
-                          height: 0,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 5.0, horizontal: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    "Rate",
-                                    style:
-                                        Theme.of(context).textTheme.labelMedium,
-                                  ),
-                                  RatingBar.builder(
-                                    initialRating:
-                                        orderDetailsController.rateCompany,
-                                    minRating: 1,
-                                    direction: Axis.horizontal,
-                                    allowHalfRating: false,
-                                    itemCount: 5,
-                                    itemSize: 30,
-                                    glow: true,
-                                    glowColor: Colors.white,
-                                    itemPadding:
-                                        EdgeInsets.symmetric(horizontal: 4.0),
-                                    itemBuilder: (context, _) => Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                    ),
-                                    onRatingUpdate: (rating) {
-                                      orderDetailsController.rateCompany =
-                                          rating;
-                                      // print(rating);
-                                    },
-                                  ),
-                                ],
-                              ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              TextField(
-                                maxLines: 3,
-                                controller: orderDetailsController
-                                    .cmpanyFeedbackController,
-                                style: TextStyle(fontSize: 13),
-                                decoration: InputDecoration(
-                                    contentPadding: EdgeInsets.only(
-                                        left: 10,
-                                        right: 10,
-                                        top: 15,
-                                        bottom: 5),
-                                    // label: Text("Give your Opnion"),
-                                    // labelText: "",
-                                    // border: OutlineInputBorder(),
-                                    // floatingLabelAlignment:
-                                    //     FloatingLabelAlignment.start,
-                                    floatingLabelBehavior:
-                                        FloatingLabelBehavior.always,
-                                    hintText: "Write Feedback...."),
-                              )
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          title: Text(
+            "Rate Service",
+            style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w800, color: Colors.blueGrey.shade900),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildRatingSection(
+                  "Technician Rating",
+                  (rating) => orderDetailsController.rateTechnician = rating,
+                  orderDetailsController.technicianFeedbackController,
                 ),
-              ),
+                const SizedBox(height: 24),
+                _buildRatingSection(
+                  "ApniSeva Experience",
+                  (rating) => orderDetailsController.rateCompany = rating,
+                  orderDetailsController.cmpanyFeedbackController,
+                ),
+              ],
             ),
-            actions: [
-              ElevatedButton(
-                  onPressed: () async {
-                    //orderDetailsController.orderDetailsModel.value.messages!.status!.otherDtl!.grandTotal.toString()
-                    SharedPreferences preferences =
-                        await SharedPreferences.getInstance();
-                    preferences.setString(
-                        ApiStrings.orderID,
-                        orderDetailsController.orderDetailsModel.value.messages!
-                            .status!.otherDtl!.orderId
-                            .toString());
-                    preferences.setString(
-                        ApiStrings.technicianId,
-                        orderDetailsController.orderDetailsModel.value.messages!
-                            .status!.otherDtl!.technicianId
-                            .toString());
-                    //      preferences.setString(
-                    // ApiStrings.orderID,
-                    // orderDetailsController.orderDetailsModel.value.messages!
-                    //     .status!.otherDtl!.orderId
-                    //     .toString());
-                    orderDetailsController.rateAndRevew();
-                    //   Get.back();
-                    //  refresh();
-                    Navigator.pop(context);
-                    // Get.back();
-                    refresh();
-                  },
-                  child: Text(
-                    "Submit",
-                    style: TextStyle(color: Colors.white),
-                  ))
-              // remindButton,
-              // cancelButton,
-              // launchButton,
-            ],
-          );
-        });
-      },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel",
+                  style: GoogleFonts.poppins(
+                      color: Colors.blueGrey, fontWeight: FontWeight.w600)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                SharedPreferences preferences =
+                    await SharedPreferences.getInstance();
+                final other = orderDetailsController
+                    .orderDetailsModel.value.messages!.status!.otherDtl!;
+                preferences.setString(
+                    ApiStrings.orderID, other.orderId.toString());
+                preferences.setString(
+                    ApiStrings.technicianId, other.technicianId.toString());
+                await orderDetailsController.rateAndRevew();
+                Navigator.pop(context);
+                refresh();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text("Submit",
+                  style: GoogleFonts.poppins(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRatingSection(String title, Function(double) onUpdate,
+      TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title,
+            style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.blueGrey.shade800)),
+        const SizedBox(height: 12),
+        RatingBar.builder(
+          initialRating: 0,
+          minRating: 1,
+          itemCount: 5,
+          itemSize: 32,
+          unratedColor: Colors.grey.shade200,
+          itemBuilder: (context, _) =>
+              const Icon(Icons.star, color: Colors.amber),
+          onRatingUpdate: onUpdate,
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: controller,
+          maxLines: 2,
+          decoration: InputDecoration(
+            hintText: "Write your feedback...",
+            hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none),
+          ),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return orderDetailsController.orderDetailsModel.value.messages!.status!
-                .rattingdetails!.isNotEmpty &&
-            orderDetailsController
-                    .orderDetailsModel.value.messages!.status!.rattingdetails !=
-                null
-        ? Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.maxFinite,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 5.0, horizontal: 8.0),
-                    // color: Colors.grey.shade50,
-                    child: Text(
-                      'Your Rating & Review',
-                      style: TextStyle(
-                          fontSize: Theme.of(context)
-                              .textTheme
-                              .headlineMedium!
-                              .fontSize,
-                          color: Theme.of(context).textTheme.titleLarge!.color),
-                    ),
-                  ),
-                  const Divider(
-                    height: 0,
-                  ),
-                  Column(
+    final status =
+        orderDetailsController.orderDetailsModel.value.messages!.status!;
+    final reviews = status.rattingdetails;
+
+    if (reviews != null && reviews.isNotEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Column(
+          children: [
+            _buildSectionHeader(Remix.star_line, "Your Review"),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: reviews.length,
+              separatorBuilder: (context, index) => const Divider(
+                  height: 1, thickness: 1, color: Color(0xFFF8F9FB)),
+              itemBuilder: (context, index) {
+                final review = reviews[index];
+                return Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.only(
-                            left: 8.0, right: 0.0, top: 10, bottom: 10),
-                        // leading: Icon(
-                        //   Icons.account_circle,
-                        //   size: 50,
-                        // ),
-                        visualDensity:
-                            VisualDensity(horizontal: 0, vertical: 0),
-                        title: Text("Technician Ratting"),
-                        isThreeLine: true,
-                        subtitle: Transform.translate(
-                          offset: Offset(0, 0),
-                          child: RatingBarIndicator(
-                            rating: double.parse(orderDetailsController
-                                    .orderDetailsModel
-                                    .value
-                                    .messages!
-                                    .status!
-                                    .rattingdetails![0]
-                                    .rating
-                                    .toString() ??
-                                ""),
-                            itemBuilder: (context, index) => Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                            ),
-                            itemCount: 5,
-                            itemSize: 20.0,
-                            direction: Axis.horizontal,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            index == 0
+                                ? "Technician Rating"
+                                : "ApniSeva Experience",
+                            style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blueGrey.shade800),
                           ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                            "${orderDetailsController.orderDetailsModel.value.messages!.status!.rattingdetails![0].review.toString()}",
-                            style: Theme.of(context).textTheme.labelMedium),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 18, right: 18, top: 0, bottom: 0),
-                        child: Divider(),
-                      ),
-                      ListTile(
-                        minVerticalPadding: 0,
-                        contentPadding: EdgeInsets.only(
-                            left: 8.0, right: 0.0, top: 10, bottom: 10),
-                        // leading: Icon(
-                        //   Icons.account_circle,
-                        //   size: 50,
-                        // ),
-                        // visualDensity: VisualDensity(horizontal: 0, vertical: 0),
-                        title: Text("Exprience With Apni Seva"),
-                        // isThreeLine: true,
-                        subtitle: Transform.translate(
-                          offset: Offset(0, 0),
-                          child: RatingBarIndicator(
-                            rating: double.parse(orderDetailsController
-                                    .orderDetailsModel
-                                    .value
-                                    .messages!
-                                    .status!
-                                    .rattingdetails![1]
-                                    .rating
-                                    .toString() ??
-                                ""),
-                            itemBuilder: (context, index) => Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                            ),
+                          RatingBarIndicator(
+                            rating:
+                                double.tryParse(review.rating.toString()) ?? 0,
+                            itemBuilder: (context, _) =>
+                                const Icon(Icons.star, color: Colors.amber),
                             itemCount: 5,
-                            itemSize: 20.0,
-                            direction: Axis.horizontal,
+                            itemSize: 16,
                           ),
-                        ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 8, top: 0, bottom: 0, right: 8),
-                        child: Text(
-                          "${orderDetailsController.orderDetailsModel.value.messages!.status!.rattingdetails![1].review.toString()}",
-                          style: Theme.of(context).textTheme.labelMedium,
+                      if (review.review != null &&
+                          review.review!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          review.review!,
+                          style: GoogleFonts.poppins(
+                              fontSize: 13, color: Colors.blueGrey.shade500),
                         ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      )
+                      ],
                     ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
-          )
-        : Center(
-            child: TextButton.icon(
-              onPressed: () => rateAndREview(context),
-              icon: Icon(
-                Icons.star,
-                color: Colors.amber,
-              ),
-              label: Text("Rate the service",
-                  style: TextStyle(
-                      color: Colors.white,
-                      decoration: TextDecoration.none,
-                      fontSize:
-                          Theme.of(context).textTheme.bodyLarge!.fontSize)),
-              style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(primaryColor),
-                  shape: MaterialStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)))),
-            ),
-          );
+          ],
+        ),
+      );
+    }
+
+    return Center(
+      child: ElevatedButton.icon(
+        onPressed: () => showRatingDialog(context),
+        icon: const Icon(Remix.star_fill, size: 18),
+        label: const Text("Rate the Service"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          minimumSize: const Size(200, 50),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
+    );
   }
-  // return }
+
+  Widget _buildSectionHeader(IconData icon, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: primaryColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Colors.blueGrey.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

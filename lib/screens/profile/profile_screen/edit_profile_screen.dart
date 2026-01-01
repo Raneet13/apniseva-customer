@@ -1,12 +1,11 @@
+import 'package:apniseva/controller/auth_controller/auth_controller.dart';
 import 'package:apniseva/utils/buttons.dart';
-import 'package:badges/badges.dart' as badges;
+import 'package:apniseva/utils/color.dart';
+import 'package:apniseva/utils/input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
-
-import '../../../controller/auth_controller/auth_controller.dart';
-import '../../../utils/input_field.dart';
-import '../profile_sections/profile_app_bar.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
@@ -16,154 +15,227 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  late double width = MediaQuery.of(context).size.width;
-  late double height = MediaQuery.of(context).size.height -
-      (MediaQuery.of(context).padding.top +
-          MediaQuery.of(context).padding.bottom);
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final profileController = Get.put(AuthController());
+
   @override
   void initState() {
-    _nameController.text =
-        profileController.userModel.value.messages!.status!.fullname ?? '';
-    _emailController.text =
-        profileController.userModel.value.messages!.status!.email ?? '';
-    _phoneController.text =
-        profileController.userModel.value.messages!.status!.contact ?? '';
     super.initState();
+    // Initialize with current user data
+    final userStatus = profileController.userModel.value.messages?.status;
+    _nameController.text = userStatus?.fullname ?? '';
+    _emailController.text = userStatus?.email ?? '';
+    _phoneController.text = userStatus?.contact ?? '';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const PrimaryAppBar(
-        title: 'Edit Profile',
+      backgroundColor: const Color(0xFFF8F9FA), // Light grey background
+      appBar: AppBar(
+        title: Text(
+          'Edit Profile',
+          style: GoogleFonts.outfit(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Remix.arrow_left_s_line, color: Colors.black),
+        ),
       ),
-      body: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: badges.Badge(
-                // badgeColor: primaryColor,
-                position: badges.BadgePosition.custom(bottom: 2, end: 10),
-                badgeContent: InkWell(
-                  onTap: () {},
-                  child: const Icon(
-                    Remix.pencil_fill,
-                    color: Colors.white,
-                    size: 16,
+            Stack(
+              children: [
+                Container(
+                  width: 110,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/appLauncherIcon.jpeg'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                child: const CircleAvatar(
-                  radius: 55,
-                  //backgroundImage: NetworkImage(DashStrings.serviceImg),
-                  backgroundImage:
-                      AssetImage('assets/images/appLauncherIcon.jpeg'),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      // Handle image pick
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Remix.camera_line,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            _buildInputGroup("Full Name", _nameController, Remix.user_line,
+                TextInputType.name),
+            const SizedBox(height: 20),
+            _buildInputGroup("Email Address", _emailController, Remix.mail_line,
+                TextInputType.emailAddress),
+            const SizedBox(height: 20),
+            _buildInputGroup("Phone Number", _phoneController, Remix.phone_line,
+                TextInputType.phone),
+            const SizedBox(height: 48),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _handleSubmit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  "Save Changes",
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                'Upload Profile',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-            SizedBox(
-              height: height * 0.02,
-            ),
-            Text(
-              'Name',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            TextInput(
-              controller: _nameController,
-              keyboardType: TextInputType.name,
-              hintText: 'Name',
-            ),
-            SizedBox(
-              height: height * 0.02,
-            ),
-            Text(
-              'Email',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            TextInput(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              hintText: "xyz@gmail.com",
-            ),
-            SizedBox(
-              height: height * 0.02,
-            ),
-            Text(
-              'Phone No',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            TextInput(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              hintText: "1234567890",
-            ),
-            const Spacer(),
-            PrimaryButton(
-              width: width,
-              height: 47,
-              onPressed: () {
-                final name = _nameController.text.trim();
-                final email = _emailController.text.trim();
-                final phoneNumber = _phoneController.text.trim();
-                if (name.isEmpty) {
-                  Get.snackbar('Error', 'Name can not be empty');
-                  return;
-                }
-                if (email.isEmpty) {
-                  Get.snackbar('Error', 'Email can not be empty');
-                  return;
-                }
-
-                if (phoneNumber.isEmpty) {
-                  Get.snackbar('Error', 'Phone number can not be empty');
-                  return;
-                }
-                showDialog(
-                  context: context,
-                  builder: (_) =>
-                      const Center(child: CircularProgressIndicator()),
-                );
-                profileController
-                    .updateUserData(name, email, phoneNumber)
-                    .then((value) async {
-                  if (value) {
-                    await profileController.getUserData();
-                    Get.snackbar('Successful', 'Profile updated successfully');
-                    Navigator.pop(context);
-                    Navigator.pop(context);
-                  } else {
-                    Navigator.pop(context);
-
-                    Get.snackbar('Error', 'Something went wrong');
-                  }
-                });
-              },
-              child: const Text(
-                "Submit",
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w600),
-              ),
-            )
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildInputGroup(String label, TextEditingController controller,
+      IconData icon, TextInputType type) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.blueGrey.shade800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: type,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              color: Colors.blueGrey.shade900,
+            ),
+            decoration: InputDecoration(
+              hintText: "Enter your $label",
+              hintStyle: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.blueGrey.shade300,
+              ),
+              prefixIcon: Icon(icon, color: Colors.blueGrey.shade400, size: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handleSubmit() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phoneNumber = _phoneController.text.trim();
+
+    if (name.isEmpty) {
+      Get.snackbar('Required', 'Please enter your name',
+          backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
+      return;
+    }
+    if (email.isEmpty) {
+      Get.snackbar('Required', 'Please enter your email',
+          backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
+      return;
+    }
+    if (phoneNumber.isEmpty) {
+      Get.snackbar('Required', 'Please enter your phone number',
+          backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>
+          Center(child: CircularProgressIndicator(color: primaryColor)),
+    );
+
+    profileController
+        .updateUserData(name, email, phoneNumber)
+        .then((value) async {
+      Navigator.pop(context); // Close loading dialog
+      if (value) {
+        await profileController.getUserData();
+        Get.snackbar('Success', 'Your profile has been updated.',
+            backgroundColor: Colors.green.withOpacity(0.1),
+            colorText: Colors.green);
+        Navigator.pop(context); // Go back to profile
+      } else {
+        Get.snackbar('Error', 'Failed to update profile. Please try again.',
+            backgroundColor: Colors.red.withOpacity(0.1),
+            colorText: Colors.red);
+      }
+    });
   }
 }

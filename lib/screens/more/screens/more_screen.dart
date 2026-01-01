@@ -2,6 +2,8 @@ import 'package:apniseva/screens/orders/screens/order_screen.dart';
 import 'package:apniseva/utils/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../controller/auth_controller/auth_controller.dart';
@@ -321,17 +323,20 @@ class _MoreScreenState extends State<MoreScreen> {
                       context: context,
                       builder: (BuildContext context) {
                         return SimpleDialog(
-                          title: const Text('Alert'),
-                          titlePadding: const EdgeInsets.symmetric(
-                              horizontal: 15.0, vertical: 5.0),
+                          // title: const Text('Alert'),
+                          // titlePadding: const EdgeInsets.symmetric(
+                          //     horizontal: 15.0, vertical: 5.0),
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 15.0, vertical: 8.0),
+                              horizontal: 25.0, vertical: 58.0),
                           titleTextStyle:
                               Theme.of(context).textTheme.headlineLarge,
                           children: [
                             Text(
                               'Do you want to logout?',
                               style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            SizedBox(
+                              height: 16,
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -347,7 +352,10 @@ class _MoreScreenState extends State<MoreScreen> {
                                     Get.offAll(
                                         () => const RegistrationScreen());
                                   },
-                                  child: const Text('Yes'),
+                                  child: const Text(
+                                    'Yes',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                 ),
                                 SecoundaryButton(
                                     width: width * 0.30,

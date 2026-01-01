@@ -12,8 +12,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:badges/badges.dart' as badges;
-import '../../../model/cart_model/cart_detail_model/cart_details_model.dart';
 import '../../cart/screen/cart_screen.dart';
 
 class ServiceScreen extends StatefulWidget {
@@ -26,19 +24,11 @@ class ServiceScreen extends StatefulWidget {
 }
 
 class _ServiceScreenState extends State<ServiceScreen> {
-  bool addedItem = false;
   final serviceController = Get.put(ServiceController());
   final addToCartController = Get.find<CartController>();
 
   @override
   void initState() {
-    // Future.delayed(Duration.zero, () {
-    //   serviceController.getService();
-    // });
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   // executes after build
-
-    // });
     service();
     super.initState();
   }
@@ -56,19 +46,17 @@ class _ServiceScreenState extends State<ServiceScreen> {
     });
   }
 
-  cartTrueFalse(String serviceName) {
+  bool cartTrueFalse(String serviceName) {
     final CartController cartController = Get.find<CartController>();
-
     bool cartTrue = false;
-    for (var i = 0;
-        i <
-            cartController
-                .cartDetailsDataModel.value.messages!.status!.allCart!.length;
-        i++) {
-      if (serviceName ==
-          cartController.cartDetailsDataModel.value.messages!.status!
-              .allCart![i].servicename) {
-        cartTrue = true;
+    if (cartController.cartDetailsDataModel.value.messages?.status?.allCart !=
+        null) {
+      for (var item in cartController
+          .cartDetailsDataModel.value.messages!.status!.allCart!) {
+        if (serviceName == item.servicename) {
+          cartTrue = true;
+          break;
+        }
       }
     }
     return cartTrue;
@@ -77,72 +65,88 @@ class _ServiceScreenState extends State<ServiceScreen> {
   String itemQty(String productId) {
     final CartController cartController = Get.find<CartController>();
     String qty = "0";
-    for (var i = 0;
-        i <
-            cartController
-                .cartDetailsDataModel.value.messages!.status!.allCart!.length;
-        i++) {
-      if (productId ==
-          cartController.cartDetailsDataModel.value.messages!.status!
-              .allCart![i].productId) {
-        qty = cartController
-            .cartDetailsDataModel.value.messages!.status!.allCart![i].qty
-            .toString();
+    if (cartController.cartDetailsDataModel.value.messages?.status?.allCart !=
+        null) {
+      for (var item in cartController
+          .cartDetailsDataModel.value.messages!.status!.allCart!) {
+        if (productId == item.productId) {
+          qty = item.qty.toString();
+          break;
+        }
       }
     }
     return qty;
   }
 
-  checkCartId(String productId) {
+  Future<String?> checkCartId(String productId) async {
     final CartController cartController = Get.find<CartController>();
-
-    for (var i = 0;
-        i <
-            cartController
-                .cartDetailsDataModel.value.messages!.status!.allCart!.length;
-        i++) {
-      if (productId ==
-          cartController.cartDetailsDataModel.value.messages!.status!
-              .allCart![i].productId) {
-        print(cartController
-            .cartDetailsDataModel.value.messages!.status!.allCart![i].cartId);
-        return cartController
-            .cartDetailsDataModel.value.messages!.status!.allCart![i].cartId;
+    if (cartController.cartDetailsDataModel.value.messages?.status?.allCart !=
+        null) {
+      for (var item in cartController
+          .cartDetailsDataModel.value.messages!.status!.allCart!) {
+        if (productId == item.productId) {
+          return item.cartId;
+        }
       }
     }
+    return null;
   }
-  void _showFullContent(BuildContext context,String htmlcontent) {
+
+  void _showFullContent(BuildContext context, String htmlcontent) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20,top: 10),
-              child: Text("Description",style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Colors.black,fontWeight: FontWeight.bold),),
-            ),
-            Padding(
-              padding: EdgeInsets.only(left: 16,right: 16,top: 4),
-              child: SingleChildScrollView(
-                child: Html(
-                  data: htmlcontent,
-                  style: {
-                    "body": Style(
-                      color: Colors.black87,
-                      fontSize: FontSize(14.0),
-                    ),
-                  },
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                "Service Details",
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.blueGrey.shade900,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Html(
+                    data: htmlcontent,
+                    style: {
+                      "body": Style(
+                        color: Colors.blueGrey.shade700,
+                        fontSize: FontSize(15.0),
+                        lineHeight: const LineHeight(1.6),
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                      ),
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
         );
       },
     );
@@ -153,1229 +157,401 @@ class _ServiceScreenState extends State<ServiceScreen> {
     final cartController = Get.find<CartController>();
     return Obx(
       () {
-        // print(serviceController.serviceDataModel.value.messages?.status!
-        //     .toJson());
-        return serviceController.isLoading.value == true
-            ? Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).primaryColor,
-                    strokeWidth: 1.5,
-                  ),
+        if (serviceController.isLoading.value) {
+          return Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(
+                color: primaryColor,
+                strokeWidth: 3,
+              ),
+            ),
+          );
+        }
+
+        final serviceData = serviceController
+                .serviceDataModel.value.messages?.status?.serviceList ??
+            [];
+
+        return Scaffold(
+          backgroundColor: Colors.grey.shade50,
+          appBar: ServiceAppBar(title: ServiceStrings.serviceName),
+          bottomNavigationBar: _buildBottomCartBar(context, cartController),
+          body: serviceData.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: serviceData.length,
+                  itemBuilder: (context, index) {
+                    return _buildServiceCard(
+                        context, serviceData[index], cartController);
+                  },
                 ),
-              )
-            : Scaffold(
-                appBar: ServiceAppBar(title: ServiceStrings.serviceName),
-                bottomSheet: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Blue banner at the top
-                    // Container(
-                    //   padding:
-                    //       EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    //   color: Colors.blue,
-                    //   child: Row(
-                    //     mainAxisAlignment: MainAxisAlignment.start,
-                    //     crossAxisAlignment: CrossAxisAlignment.center,
-                    //     children: [
-                    //       // Icon with notification bubble
-                    //       Stack(
-                    //         children: [
-                    //           Icon(
-                    //             Icons.shopping_bag_outlined,
-                    //             color: Colors.white,
-                    //             size: 40,
-                    //           ),
-                    //           Positioned(
-                    //             top: 0,
-                    //             right: 0,
-                    //             child: Container(
-                    //               height: 55,
-                    //               padding: const EdgeInsets.symmetric(
-                    //                   horizontal: 10.0),
-                    //               alignment: Alignment.center,
-                    //               child: badges.Badge(
-                    //                   // position: badges.BadgePosition.topEnd(
-                    //                   //     top: -0, end: -5),
-                    //                   showBadge: cartController
-                    //                               .cartDetailsDataModel
-                    //                               .value
-                    //                               .messages
-                    //                               ?.status!
-                    //                               .allCart ==
-                    //                           null
-                    //                       ? false
-                    //                       : true,
-                    //                   badgeContent: Text(
-                    //                     cartController
-                    //                                 .cartDetailsDataModel
-                    //                                 .value
-                    //                                 .messages
-                    //                                 ?.status!
-                    //                                 .allCart ==
-                    //                             null
-                    //                         ? ''
-                    //                         : cartController
-                    //                             .cartDetailsDataModel
-                    //                             .value
-                    //                             .messages!
-                    //                             .status!
-                    //                             .allCart!
-                    //                             .length
-                    //                             .toString(),
-                    //                     style: Theme.of(context)
-                    //                         .textTheme
-                    //                         .bodySmall,
-                    //                   ),
-                    //                   child: const Icon(
-                    //                     Remix.shopping_cart_2_fill,
-                    //                     color: Colors.white,
-                    //                   )),
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //       SizedBox(width: 10),
-                    //       // Text: "Add 2 more items to get 5% off"
-                    //       // Expanded(
-                    //       //   child: Text(
-                    //       //     'Add 2 more items to get 5% off',
-                    //       //     style: TextStyle(
-                    //       //       color: Colors.white,
-                    //       //       fontSize: 16,
-                    //       //       fontWeight: FontWeight.w500,
-                    //       //     ),
-                    //       //   ),
-                    //       // ),
-                    //     ],
-                    //   ),
-                    // ),
-                    // Space between banners
-                    // SizedBox(height: 8),
-                    // Bottom banner with item count and "Go to Cart"
-                    InkWell(
-                            onTap: () {
-                              Get.to(() => const CartScreen());
-                            },
-                      child: Container(
-                        // color: Colors.blue,
-                        padding:
-                            EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-                        color: Colors.blue.shade50,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                             Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                               children: [
-                                Container(
-                                        height: 35,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10.0),
-                                        alignment: Alignment.center,
-                                        child: badges.Badge(
-                                            // position: badges.BadgePosition.topEnd(
-                                            //     top: -0, end: -5),
-                                            showBadge: cartController
-                                                        .cartDetailsDataModel
-                                                        .value
-                                                        .messages
-                                                        ?.status!
-                                                        .allCart ==
-                                                    null
-                                                ? false
-                                                : true,
-                                            badgeContent: Text(
-                                              cartController
-                                                          .cartDetailsDataModel
-                                                          .value
-                                                          .messages
-                                                          ?.status!
-                                                          .allCart ==
-                                                      null
-                                                  ? ''
-                                                  : cartController
-                                                      .cartDetailsDataModel
-                                                      .value
-                                                      .messages!
-                                                      .status!
-                                                      .allCart!
-                                                      .length
-                                                      .toString(),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
-                                            ),
-                                            child: const Icon(
-                                              Remix.shopping_cart_2_fill,
-                                              color: Colors.blue,
-                                            )
-                                            ),
-                                      ),
-                              SizedBox(width: 10,),
-                              Text(
-                              '${cartController.cartDetailsDataModel.value.messages?.status!.allCart == null ? '' : cartController.cartDetailsDataModel.value.messages!.status!.allCart!.length.toString()} item',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                               ],
-                             ),
-                            
-                            Text(
-                              'Go to Cart',
-                              style: const TextStyle(
-                                // color: Colors.blue,
-                                fontSize: 16,
-                                // fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.search_off_rounded, size: 80, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            'No Services Found',
+            style: TextStyle(
+              color: Colors.blueGrey.shade300,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(
+      BuildContext context, ServiceList item, CartController cartController) {
+    final bool isInCart = cartTrueFalse(item.serviceName!);
+    final String qty = itemQty(item.serviceId.toString());
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.grey.shade100, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showFullContent(context, item.serviceDetails ?? ""),
+          borderRadius: BorderRadius.circular(28),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Premium Image Section
+                  Container(
+                    width: 115,
+                    height: 115,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(22),
                     ),
-                  ],
-                ),
-                body: serviceController.serviceDataModel.value.messages?.status!
-                                .serviceList! ==
-                            null ||
-                        serviceController.serviceDataModel.value.messages!
-                            .status!.serviceList!.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No Service Found',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 5,right: 5,bottom: 120),
-                          // child: Obx(() {
-                          //   return ListView.builder(
-                          //       shrinkWrap: true,
-                          //       itemCount: serviceController.serviceDataModel.value
-                          //           .messages!.status!.serviceList!.length,
-                          //       itemBuilder: (context, index) {
-                          //         List<ServiceList> serviceData = serviceController
-                          //             .serviceDataModel
-                          //             .value
-                          //             .messages!
-                          //             .status!
-                          //             .serviceList!;
-                          //         // addToCartController.cartTrueFalse(
-                          //         //     serviceData[index].serviceName!);
-                          //         return Card(
-                          //           elevation: 1.4,
-                          //           child: ListTile(
-                          //             shape: RoundedRectangleBorder(
-                          //                 borderRadius: BorderRadius.circular(8.0)),
-                          //             tileColor: Colors.grey.shade200,
-                          //             contentPadding: const EdgeInsets.symmetric(
-                          //                 horizontal: 5.0),
-                          //             leading: ClipRRect(
-                          //               borderRadius: BorderRadius.circular(8.0),
-                          //               child: Container(
-                          //                 height: 40,
-                          //                 width: 40,
-                          //                 padding: const EdgeInsets.all(5.0),
-                          //                 child: Image.network(
-                          //                   '${ApiEndPoint.imageAPI}/${serviceData[index].serviceImage}',
-                          //                   fit: BoxFit.contain,
-                          //                 ),
-                          //               ),
-                          //             ),
-                          //             title: Row(
-                          //               mainAxisAlignment:
-                          //                   MainAxisAlignment.spaceBetween,
-                          //               children: [
-                          //                 Flexible(
-                          //                   child: SizedBox(
-                          //                     child: Text(
-                          //                       serviceData[index].serviceName ??
-                          //                           "",
-                          //                       style: Theme.of(context)
-                          //                           .textTheme
-                          //                           .labelMedium!
-                          //                           .copyWith(
-                          //                             fontWeight: FontWeight.bold,
-                          //                             fontSize: 11,
-                          //                           ),
-                          //                     ),
-                          //                   ),
-                          //                 ),
-                          //                 Text(' ₹${serviceData[index].amount}',
-                          //                     style: Theme.of(context)
-                          //                         .textTheme
-                          //                         .bodyMedium),
-                          //               ],
-                          //             ),
-                          //             subtitle: Text(
-                          //               serviceData[index].serviceDetails!,
-                          //               maxLines: 1,
-                          //               overflow: TextOverflow.ellipsis,
-                          //               style:
-                          //                   Theme.of(context).textTheme.titleSmall,
-                          //             ),
-                          //             trailing: cartTrueFalse(
-                          //                     serviceData[index].serviceName!)
-                          //                 ? SizedBox()
-                          //                 : Row(
-                          //                     mainAxisSize: MainAxisSize.min,
-                          //                     children: [
-                          //                       IconButton(
-                          //                         onPressed: () {
-                          //                           if (serviceData[index]
-                          //                                   .itemQuantity >
-                          //                               0) {
-                          //                             serviceData[index]
-                          //                                 .itemQuantity--;
-                          //                             setState(() {});
-                          //                           }
-                          //                         },
-                          //                         icon: Icon(
-                          //                           Icons.remove_circle,
-                          //                           color: primaryColor,
-                          //                         ),
-                          //                       ),
-                          //                       Text(
-                          //                         "${serviceData[index].itemQuantity}",
-                          //                       ),
-                          //                       IconButton(
-                          //                         onPressed: () {
-                          //                           serviceData[index]
-                          //                               .itemQuantity++;
-                          //                           setState(() {});
-                          //                         },
-                          //                         icon: Icon(
-                          //                           Icons.add_circle,
-                          //                           color: primaryColor,
-                          //                         ),
-                          //                       ),
-                          //                       InkWell(
-                          //                         onTap: () async {
-                          //                           // SharedPreferences preferences =
-                          //                           //     await SharedPreferences
-                          //                           //         .getInstance();
-                          //                           // preferences.setString(
-                          //                           //     ApiStrings.serviceID,
-                          //                           //     serviceData[index].serviceId!);
-                          //                           // preferences.setString(
-                          //                           //     ApiStrings.catID,
-                          //                           //     serviceData[index].catId!);
-                          //                           // preferences.setString(
-                          //                           //     ApiStrings.productQty,
-                          //                           //     "${serviceData[index].itemQuantity}");
-                          //                           // addedItem =
-                          //                           //     await addToCartController
-                          //                           //         .addToCart();
-                          //                           // debugPrint(
-                          //                           //     "${addedItem.toString()} this is the debug print");
-                          //                           // print(
-                          //                           //     "Ths is the cart it of your product ${serviceData[index].serviceName}");
-                          //                           print(addToCartController
-                          //                               .cartTrueFalse(
-                          //                                   serviceData[index]
-                          //                                       .serviceName!));
-                          //                           // await addToCartController
-                          //                           //         .cartTrueFalse(
-                          //                           //             serviceData[index]
-                          //                           //                 .serviceName!)
-                          //                           //     ? print(
-                          //                           //         "This car item is add on the cart")
-                          //                           //     : print(
-                          //                           //         "The product not available on the cart section");
-                          //                           // .then((v) => print(
-                          //                           //     "${v} Thisi is the future tye of cart added on the addt cart item or not"));
-                          //                           // print(
-                          //                           //     "${} ");
-                          //                           // Future.delayed(Duration.zero, () {
-                          //                           //   addToCartController.addToCart();
-                          //                           // });
-                          //                           refresh();
-                          //                         },
-                          //                         child: Container(
-                          //                           height: 40,
-                          //                           width: 40,
-                          //                           alignment: Alignment.center,
-                          //                           decoration: BoxDecoration(
-                          //                               color: primaryColor,
-                          //                               borderRadius:
-                          //                                   BorderRadius.circular(
-                          //                                       8.0)),
-                          //                           child: Icon(
-                          //                             Icons
-                          //                                 .add_shopping_cart_rounded,
-                          //                             color: Colors.white,
-                          //                             size: Theme.of(context)
-                          //                                 .textTheme
-                          //                                 .headlineLarge!
-                          //                                 .fontSize,
-                          //                           ),
-                          //                         ),
-                          //                       ),
-                          //                     ],
-                          //                   ),
-                          //             // : InkWell(
-                          //             //     onTap: () async {
-                          //             //       // SharedPreferences preferences =
-                          //             //       //     await SharedPreferences
-                          //             //       //         .getInstance();
-                          //             //       // preferences.setString(
-                          //             //       //     ApiStrings.serviceID,
-                          //             //       //     serviceData[index].serviceId!);
-                          //             //       // preferences.setString(
-                          //             //       //     ApiStrings.catID,
-                          //             //       //     serviceData[index].catId!);
-                          //             //       // preferences.setString(
-                          //             //       //     ApiStrings.productQty,
-                          //             //       //     "${serviceData[index].itemQuantity}");
-                          //             //       // addedItem =
-                          //             //       //     await addToCartController
-                          //             //       //         .addToCart();
-                          //             //       // debugPrint(
-                          //             //       //     "${addedItem.toString()} this is the debug print");
-                          //             //       // print(
-                          //             //       //     "Ths is the cart it of your product ${serviceData[index].serviceName}");
-                          //             //       await addToCartController
-                          //             //               .CartTrueFalse(
-                          //             //                   serviceData[index]
-                          //             //                       .serviceName!)
-                          //             //           ? print(
-                          //             //               "This car item is add on the cart")
-                          //             //           : print(
-                          //             //               "The product not available on the cart section");
-                          //             //       // .then((v) => print(
-                          //             //       //     "${v} Thisi is the future tye of cart added on the addt cart item or not"));
-                          //             //       // print(
-                          //             //       //     "${} ");
-                          //             //       // Future.delayed(Duration.zero, () {
-                          //             //       //   addToCartController.addToCart();
-                          //             //       // });
-                          //             //       refresh();
-                          //             //     },
-                          //             //     child: Container(
-                          //             //       height: 40,
-                          //             //       width: 40,
-                          //             //       alignment: Alignment.center,
-                          //             //       decoration: BoxDecoration(
-                          //             //           color: primaryColor,
-                          //             //           borderRadius:
-                          //             //               BorderRadius.circular(
-                          //             //                   8.0)),
-                          //             //       child: Icon(
-                          //             //         Icons.add_shopping_cart_rounded,
-                          //             //         color: Colors.white,
-                          //             //         size: Theme.of(context)
-                          //             //             .textTheme
-                          //             //             .headlineLarge!
-                          //             //             .fontSize,
-                          //             //       ),
-                          //             //     ),
-                          //             //   ),
-                          //           ),
-                          //         );
-                          //       });
-                          // }),
-
-                          child: Column(
-                            children: List.generate(
-                              
-                              serviceController.serviceDataModel.value.messages!
-                                  .status!.serviceList!.length,
-                              (index) {
-                                List<ServiceList> serviceData =
-                                    serviceController.serviceDataModel.value
-                                        .messages!.status!.serviceList!;
-                                return Card(
-                                  elevation: 1.4,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      color: Colors.grey.shade200
-                                    ),
-                                    padding: EdgeInsets.symmetric(horizontal: 5.0,vertical: 5),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                serviceData[index].serviceName ??
-                                                    "",
-                                                    maxLines: 2,
-                                                style:GoogleFonts.openSans(textStyle:  Theme.of(context)
-                                                    .textTheme
-                                                    .bodyLarge!
-                                                    .copyWith(
-                                                      fontWeight: FontWeight.bold,
-                                                      // fontSize: 14,
-                                                      color: Colors.black
-                                                    ),)
-                                              ),
-                                              SizedBox(height: 4,),
-                                              Text(' ₹${serviceData[index].amount}',
-                                                  style:GoogleFonts.roboto(textStyle: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium!.copyWith(fontSize: 18))),
-                                                      SizedBox(height: 4,),
-                                                      serviceData[index].serviceDetails==""||serviceData[index].serviceDetails==null?SizedBox(): Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          Html(shrinkWrap: true, data: """${serviceData[index].serviceDetails!.length>=200?serviceData[index].serviceDetails!.substring(0,140):serviceData[index].serviceDetails!??"<p></p>"}""",style: {
-                                                                                                        "body": Style(
-                                                                                                          color: Colors.black45, fontSize: FontSize(12.0) // Set text color to grey
-                                                                                                        ),
-                                                                                                      },),
-                                                                                                     serviceData[index].serviceDetails!.length>=100? Transform.translate(
-                                                                                                      offset: Offset(100, -30),
-                                                                                                       child: InkWell(onTap: (){
-                                                                                                       _showFullContent(context,serviceData[index].serviceDetails.toString());
-                                                                                                        }, child: Text("Read more",style: TextStyle(color: Colors.blue),)),
-                                                                                                     ):SizedBox()
-                                                        ],
-                                                      ),
-                                            ],
-                                          ),
-                                        ),
-                                        
-                                        Column(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          height: 80,
-                                          width: 80,
-                                          padding: const EdgeInsets.all(5.0),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(8),
-                                            image: DecorationImage(
-                                              fit: BoxFit.fill,
-                                              image:serviceData[index].serviceImage==null?AssetImage("assets/images/no_image.jpg"): NetworkImage("${ApiEndPoint.imageAPI}/${serviceData[index].serviceImage}""")
-                                            )
-                                          ),
-                                          // child: Image.network(
-                                          //   '',
-                                          //   fit: BoxFit.contain,
-                                          // ),
-                                        ),
-                                        SizedBox(height: 8,),
-                                        SizedBox(
-                                          height: 40,
-                                          width: 105,
-                                          child: cartTrueFalse(
-                                                  serviceData[index].serviceName!)
-                                              ? Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    IconButton(
-                                                      onPressed: () async {
-                                                        int itemQnty = int.parse(
-                                                            itemQty(
-                                                                serviceData[index]
-                                                                    .serviceId
-                                                                    .toString()));
-                                                        int subqty = itemQnty - 1;
-                                                        if (itemQnty <= 1) {
-                                                          SharedPreferences
-                                                              preferences =
-                                                              await SharedPreferences
-                                                                  .getInstance();
-                                                          // print("! or 0");
-                                                          // preferences.setString(
-                                                          //     ApiStrings.serviceID,
-                                                          //     serviceData[index]
-                                                          //         .serviceId!);
-                                                          preferences.setString(
-                                                              ApiStrings.cartID,
-                                                              await checkCartId(
-                                                                  serviceData[index]
-                                                                      .serviceId
-                                                                      .toString()));
-                                                          // var pr = await preferences
-                                                          //     .getString(
-                                                          //         'ApiStrings.catID');
-                                                          // print(pr);
-                                                          // print(checkCartId(
-                                                          //     serviceData[index]
-                                                          //         .serviceId
-                                                          //         .toString()));
-                                                          // preferences.setString(
-                                                          //     ApiStrings.productQty,
-                                                          //     subqty
-                                                          //         .toString()); //serviceData[index].itemQuantity - 1
-                                                          Future.delayed(
-                                                              Duration.zero, () {
-                                                            addToCartController
-                                                                .deletItemFrmCart();
-                                                          });
-                                                          List<AllCart>? cartData =
-                                                              addToCartController
-                                                                  .cartDetailsDataModel
-                                                                  .value
-                                                                  .messages!
-                                                                  .status!
-                                                                  .allCart!;
-                                                          cartData.removeAt(index);
-                                                          refresh();
-                                                                        
-                                                          //  setState(() {});
-                                                        } else {
-                                                          SharedPreferences
-                                                              preferences =
-                                                              await SharedPreferences
-                                                                  .getInstance();
-                                                          preferences.setString(
-                                                              ApiStrings.serviceID,
-                                                              serviceData[index]
-                                                                  .serviceId!);
-                                                          preferences.setString(
-                                                              ApiStrings.catID,
-                                                              serviceData[index]
-                                                                  .catId!);
-                                                          preferences.setString(
-                                                              ApiStrings.productQty,
-                                                              subqty.toString()); //
-                                                                        
-                                                          Future.delayed(
-                                                              Duration.zero, () {
-                                                            addToCartController
-                                                                .addToCart();
-                                                          });
-                                                                        
-                                                          // cartData.removeAt(index);
-                                                          refresh();
-                                                        }
-                                                      },
-                                                      icon: Icon(
-                                                        Icons.remove_circle,
-                                                        color: primaryColor,
-                                                      ),
-                                                    ),
-                                                                        
-                                                    Text(
-                                                      itemQty(serviceData[index]
-                                                          .serviceId
-                                                          .toString()),
-                                                    ),
-                                                    IconButton(
-                                                      onPressed: () async {
-                                                        int addqty = int.parse(
-                                                                itemQty(serviceData[
-                                                                        index]
-                                                                    .serviceId
-                                                                    .toString())) +
-                                                            1;
-                                                        SharedPreferences
-                                                            preferences =
-                                                            await SharedPreferences
-                                                                .getInstance();
-                                                        preferences.setString(
-                                                            ApiStrings.serviceID,
-                                                            serviceData[index]
-                                                                .serviceId!);
-                                                        preferences.setString(
-                                                            ApiStrings.catID,
-                                                            serviceData[index]
-                                                                .catId!);
-                                                        preferences.setString(
-                                                            ApiStrings.productQty,
-                                                            addqty.toString()); //
-                                                                        
-                                                        Future.delayed(
-                                                            Duration.zero, () {
-                                                          addToCartController
-                                                              .addToCart();
-                                                        });
-                                                                        
-                                                        // serviceData[index]
-                                                        //     .itemQuantity++;
-                                                        refresh();
-                                                        // setState(() {});
-                                                      },
-                                                      icon: Icon(
-                                                        Icons.add_circle,
-                                                        color: primaryColor,
-                                                      ),
-                                                    ),
-                                                    // InkWell(
-                                                    //   onTap: () async {
-                                                    //     SharedPreferences
-                                                    //         preferences =
-                                                    //         await SharedPreferences
-                                                    //             .getInstance();
-                                                    //     preferences.setString(
-                                                    //         ApiStrings.serviceID,
-                                                    //         serviceData[index]
-                                                    //             .serviceId!);
-                                                    //     preferences.setString(
-                                                    //         ApiStrings.catID,
-                                                    //         serviceData[index]
-                                                    //             .catId!);
-                                                    //     preferences.setString(
-                                                    //         ApiStrings.productQty,
-                                                    //         "${serviceData[index].itemQuantity}");
-                                                    //     // addedItem =
-                                                    //     //     await addToCartController
-                                                    //     //         .addToCart();
-                                                    //     // debugPrint(
-                                                    //     //     "${addedItem.toString()} this is the debug print");
-                                                    //     // print(
-                                                    //     //     "Ths is the cart it of your product ${serviceData[index].serviceName}");
-                                                    //     // print(addToCartController
-                                                    //     //     .cartTrueFalse(
-                                                    //     //         serviceData[index]
-                                                    //     //             .serviceName!));
-                                                    //     // await addToCartController
-                                                    //     //         .cartTrueFalse(
-                                                    //     //             serviceData[index]
-                                                    //     //                 .serviceName!)
-                                                    //     //     ? print(
-                                                    //     //         "This car item is add on the cart")
-                                                    //     //     : print(
-                                                    //     //         "The product not available on the cart section");
-                                                    //     // .then((v) => print(
-                                                    //     //     "${v} Thisi is the future tye of cart added on the addt cart item or not"));
-                                                    //     // print(
-                                                    //     //     "${} ");
-                                                    //     Future.delayed(Duration.zero,
-                                                    //         () {
-                                                    //       addToCartController
-                                                    //           .addToCart();
-                                                    //     });
-                                                    //     refresh();
-                                                    //   },
-                                                    //   child: Container(
-                                                    //     height: 40,
-                                                    //     width: 40,
-                                                    //     alignment: Alignment.center,
-                                                    //     decoration: BoxDecoration(
-                                                    //         color: primaryColor,
-                                                    //         borderRadius:
-                                                    //             BorderRadius.circular(
-                                                    //                 8.0)),
-                                                    //     child: Icon(
-                                                    //       Icons
-                                                    //           .add_shopping_cart_rounded,
-                                                    //       color: Colors.white,
-                                                    //       size: Theme.of(context)
-                                                    //           .textTheme
-                                                    //           .headlineLarge!
-                                                    //           .fontSize,
-                                                    //     ),
-                                                    //   ),
-                                                    // ),
-                                                  ],
-                                                )
-                                              : SizedBox(
-                                                  height: 40,
-                                                  width: 40,
-                                                  child: InkWell(
-                                                    onTap: () async {
-                                                      SharedPreferences
-                                                          preferences =
-                                                          await SharedPreferences
-                                                              .getInstance();
-                                                      preferences.setString(
-                                                          ApiStrings.serviceID,
-                                                          serviceData[index]
-                                                              .serviceId!);
-                                                      preferences.setString(
-                                                          ApiStrings.catID,
-                                                          serviceData[index]
-                                                              .catId!);
-                                                      preferences.setString(
-                                                          ApiStrings.productQty,
-                                                          "${serviceData[index].itemQuantity}");
-                                                      // addedItem =
-                                                      //     await addToCartController
-                                                      //         .addToCart();
-                                                      // debugPrint(
-                                                      //     "${addedItem.toString()} this is the debug print");
-                                                      // print(
-                                                      //     "Ths is the cart it of your product ${serviceData[index].serviceName}");
-                                                      // print(addToCartController
-                                                      //     .cartTrueFalse(
-                                                      //         serviceData[index]
-                                                      //             .serviceName!));
-                                                      // await addToCartController
-                                                      //         .cartTrueFalse(
-                                                      //             serviceData[index]
-                                                      //                 .serviceName!)
-                                                      //     ? print(
-                                                      //         "This car item is add on the cart")
-                                                      //     : print(
-                                                      //         "The product not available on the cart section");
-                                                      // .then((v) => print(
-                                                      //     "${v} Thisi is the future tye of cart added on the addt cart item or not"));
-                                                      // print(
-                                                      //     "${} ");
-                                                      Future.delayed(Duration.zero,
-                                                          () {
-                                                        addToCartController
-                                                            .addToCart();
-                                                      });
-                                                      refresh();
-                                                    },
-                                                    child: Container(
-                                                      height: 40,
-                                                      width: 40,
-                                                      padding: EdgeInsets.zero,
-                                                      margin: EdgeInsets.only(
-                                                          left: 20, right: 20,top: 5,bottom: 5),
-                                                      alignment: Alignment.center,
-                                                      decoration: BoxDecoration(
-                                                          color: primaryColor,
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                  8.0)),
-                                                      child: Text(
-                                                        "Add",
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .headlineSmall!
-                                                                  .fontSize,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                        ),
-                                      ],
-                                    ),
-                                
-                                      ],
-                                    ),
-                                  )
-                                  // ListTile(
-                                  //   shape: RoundedRectangleBorder(
-                                  //       borderRadius:
-                                  //           BorderRadius.circular(8.0)),
-                                  //   tileColor: ,
-                                  //   titleTextStyle: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),
-                                  //   contentPadding: const EdgeInsets.symmetric(
-                                  //       horizontal: 5.0),
-
-                                  //   // leading: ClipRRect(
-                                  //   //   borderRadius: BorderRadius.circular(8.0),
-                                  //   //   child: Container(
-                                  //   //     height: 40,
-                                  //   //     width: 40,
-                                  //   //     padding: const EdgeInsets.all(5.0),
-                                  //   //     child: Image.network(
-                                  //   //       '${ApiEndPoint.imageAPI}/${serviceData[index].serviceImage}',
-                                  //   //       fit: BoxFit.contain,
-                                  //   //     ),
-                                  //   //   ),
-                                  //   // ),
-                                  //   title: Row(
-                                  //     mainAxisAlignment:
-                                  //         MainAxisAlignment.spaceBetween,
-                                  //     children: [
-                                  //       Expanded(
-                                  //         child: Text(
-                                  //           serviceData[index].serviceName ??
-                                  //               "",
-                                  //               maxLines: 2,
-                                  //           style: Theme.of(context)
-                                  //               .textTheme
-                                  //               .bodyMedium!
-                                  //               .copyWith(
-                                  //                 fontWeight: FontWeight.bold,
-                                  //                 fontSize: 12,
-                                  //               ),
-                                  //         ),
-                                  //       ),
-                                  //       Text(' ₹${serviceData[index].amount}',
-                                  //           style: Theme.of(context)
-                                  //               .textTheme
-                                  //               .bodyMedium),
-                                  //     ],
-                                  //   ),
-                                  //   // subtitle: Text(
-                                  //   //   serviceData[index].serviceDetails!,
-                                  //   //   maxLines: 1,
-                                  //   //   overflow: TextOverflow.ellipsis,
-                                  //   //   style: Theme.of(context)
-                                  //   //       .textTheme
-                                  //   //       .titleSmall,
-                                  //   // ),
-                                  
-                                  //   subtitleTextStyle: TextStyle(overflow: TextOverflow.ellipsis,color: Colors.black),
-                                  //   subtitle:serviceData[index].serviceDetails==""||serviceData[index].serviceDetails==null?SizedBox(): SizedBox(height: 65, child: Html(shrinkWrap: true, data: """${serviceData[index].serviceDetails!}""",)),
-                                  //   trailing: Column(
-                                  //     mainAxisAlignment: MainAxisAlignment.start,
-                                  //     crossAxisAlignment: CrossAxisAlignment.start,
-                                  //     children: [
-                                  //       Container(
-                                  //         height: 60,
-                                  //         width: 60,
-                                  //         padding: const EdgeInsets.all(5.0),
-                                  //         child: Image.network(
-                                  //           '${ApiEndPoint.imageAPI}/${serviceData[index].serviceImage}',
-                                  //           fit: BoxFit.contain,
-                                  //         ),
-                                  //       ),
-                                  //       SizedBox(
-                                  //         height: 40,
-                                  //         width: 105,
-                                  //         child: cartTrueFalse(
-                                  //                 serviceData[index].serviceName!)
-                                  //             ? Row(
-                                  //                 mainAxisSize: MainAxisSize.min,
-                                  //                 children: [
-                                  //                   IconButton(
-                                  //                     onPressed: () async {
-                                  //                       int itemQnty = int.parse(
-                                  //                           itemQty(
-                                  //                               serviceData[index]
-                                  //                                   .serviceId
-                                  //                                   .toString()));
-                                  //                       int subqty = itemQnty - 1;
-                                  //                       if (itemQnty <= 1) {
-                                  //                         SharedPreferences
-                                  //                             preferences =
-                                  //                             await SharedPreferences
-                                  //                                 .getInstance();
-                                  //                         // print("! or 0");
-                                  //                         // preferences.setString(
-                                  //                         //     ApiStrings.serviceID,
-                                  //                         //     serviceData[index]
-                                  //                         //         .serviceId!);
-                                  //                         preferences.setString(
-                                  //                             ApiStrings.cartID,
-                                  //                             await checkCartId(
-                                  //                                 serviceData[index]
-                                  //                                     .serviceId
-                                  //                                     .toString()));
-                                  //                         // var pr = await preferences
-                                  //                         //     .getString(
-                                  //                         //         'ApiStrings.catID');
-                                  //                         // print(pr);
-                                  //                         // print(checkCartId(
-                                  //                         //     serviceData[index]
-                                  //                         //         .serviceId
-                                  //                         //         .toString()));
-                                  //                         // preferences.setString(
-                                  //                         //     ApiStrings.productQty,
-                                  //                         //     subqty
-                                  //                         //         .toString()); //serviceData[index].itemQuantity - 1
-                                  //                         Future.delayed(
-                                  //                             Duration.zero, () {
-                                  //                           addToCartController
-                                  //                               .deletItemFrmCart();
-                                  //                         });
-                                  //                         List<AllCart>? cartData =
-                                  //                             addToCartController
-                                  //                                 .cartDetailsDataModel
-                                  //                                 .value
-                                  //                                 .messages!
-                                  //                                 .status!
-                                  //                                 .allCart!;
-                                  //                         cartData.removeAt(index);
-                                  //                         refresh();
-                                                                        
-                                  //                         //  setState(() {});
-                                  //                       } else {
-                                  //                         SharedPreferences
-                                  //                             preferences =
-                                  //                             await SharedPreferences
-                                  //                                 .getInstance();
-                                  //                         preferences.setString(
-                                  //                             ApiStrings.serviceID,
-                                  //                             serviceData[index]
-                                  //                                 .serviceId!);
-                                  //                         preferences.setString(
-                                  //                             ApiStrings.catID,
-                                  //                             serviceData[index]
-                                  //                                 .catId!);
-                                  //                         preferences.setString(
-                                  //                             ApiStrings.productQty,
-                                  //                             subqty.toString()); //
-                                                                        
-                                  //                         Future.delayed(
-                                  //                             Duration.zero, () {
-                                  //                           addToCartController
-                                  //                               .addToCart();
-                                  //                         });
-                                                                        
-                                  //                         // cartData.removeAt(index);
-                                  //                         refresh();
-                                  //                       }
-                                  //                     },
-                                  //                     icon: Icon(
-                                  //                       Icons.remove_circle,
-                                  //                       color: primaryColor,
-                                  //                     ),
-                                  //                   ),
-                                                                        
-                                  //                   Text(
-                                  //                     itemQty(serviceData[index]
-                                  //                         .serviceId
-                                  //                         .toString()),
-                                  //                   ),
-                                  //                   IconButton(
-                                  //                     onPressed: () async {
-                                  //                       int addqty = int.parse(
-                                  //                               itemQty(serviceData[
-                                  //                                       index]
-                                  //                                   .serviceId
-                                  //                                   .toString())) +
-                                  //                           1;
-                                  //                       SharedPreferences
-                                  //                           preferences =
-                                  //                           await SharedPreferences
-                                  //                               .getInstance();
-                                  //                       preferences.setString(
-                                  //                           ApiStrings.serviceID,
-                                  //                           serviceData[index]
-                                  //                               .serviceId!);
-                                  //                       preferences.setString(
-                                  //                           ApiStrings.catID,
-                                  //                           serviceData[index]
-                                  //                               .catId!);
-                                  //                       preferences.setString(
-                                  //                           ApiStrings.productQty,
-                                  //                           addqty.toString()); //
-                                                                        
-                                  //                       Future.delayed(
-                                  //                           Duration.zero, () {
-                                  //                         addToCartController
-                                  //                             .addToCart();
-                                  //                       });
-                                                                        
-                                  //                       // serviceData[index]
-                                  //                       //     .itemQuantity++;
-                                  //                       refresh();
-                                  //                       // setState(() {});
-                                  //                     },
-                                  //                     icon: Icon(
-                                  //                       Icons.add_circle,
-                                  //                       color: primaryColor,
-                                  //                     ),
-                                  //                   ),
-                                  //                   // InkWell(
-                                  //                   //   onTap: () async {
-                                  //                   //     SharedPreferences
-                                  //                   //         preferences =
-                                  //                   //         await SharedPreferences
-                                  //                   //             .getInstance();
-                                  //                   //     preferences.setString(
-                                  //                   //         ApiStrings.serviceID,
-                                  //                   //         serviceData[index]
-                                  //                   //             .serviceId!);
-                                  //                   //     preferences.setString(
-                                  //                   //         ApiStrings.catID,
-                                  //                   //         serviceData[index]
-                                  //                   //             .catId!);
-                                  //                   //     preferences.setString(
-                                  //                   //         ApiStrings.productQty,
-                                  //                   //         "${serviceData[index].itemQuantity}");
-                                  //                   //     // addedItem =
-                                  //                   //     //     await addToCartController
-                                  //                   //     //         .addToCart();
-                                  //                   //     // debugPrint(
-                                  //                   //     //     "${addedItem.toString()} this is the debug print");
-                                  //                   //     // print(
-                                  //                   //     //     "Ths is the cart it of your product ${serviceData[index].serviceName}");
-                                  //                   //     // print(addToCartController
-                                  //                   //     //     .cartTrueFalse(
-                                  //                   //     //         serviceData[index]
-                                  //                   //     //             .serviceName!));
-                                  //                   //     // await addToCartController
-                                  //                   //     //         .cartTrueFalse(
-                                  //                   //     //             serviceData[index]
-                                  //                   //     //                 .serviceName!)
-                                  //                   //     //     ? print(
-                                  //                   //     //         "This car item is add on the cart")
-                                  //                   //     //     : print(
-                                  //                   //     //         "The product not available on the cart section");
-                                  //                   //     // .then((v) => print(
-                                  //                   //     //     "${v} Thisi is the future tye of cart added on the addt cart item or not"));
-                                  //                   //     // print(
-                                  //                   //     //     "${} ");
-                                  //                   //     Future.delayed(Duration.zero,
-                                  //                   //         () {
-                                  //                   //       addToCartController
-                                  //                   //           .addToCart();
-                                  //                   //     });
-                                  //                   //     refresh();
-                                  //                   //   },
-                                  //                   //   child: Container(
-                                  //                   //     height: 40,
-                                  //                   //     width: 40,
-                                  //                   //     alignment: Alignment.center,
-                                  //                   //     decoration: BoxDecoration(
-                                  //                   //         color: primaryColor,
-                                  //                   //         borderRadius:
-                                  //                   //             BorderRadius.circular(
-                                  //                   //                 8.0)),
-                                  //                   //     child: Icon(
-                                  //                   //       Icons
-                                  //                   //           .add_shopping_cart_rounded,
-                                  //                   //       color: Colors.white,
-                                  //                   //       size: Theme.of(context)
-                                  //                   //           .textTheme
-                                  //                   //           .headlineLarge!
-                                  //                   //           .fontSize,
-                                  //                   //     ),
-                                  //                   //   ),
-                                  //                   // ),
-                                  //                 ],
-                                  //               )
-                                  //             : SizedBox(
-                                  //                 height: 40,
-                                  //                 width: 40,
-                                  //                 child: InkWell(
-                                  //                   onTap: () async {
-                                  //                     SharedPreferences
-                                  //                         preferences =
-                                  //                         await SharedPreferences
-                                  //                             .getInstance();
-                                  //                     preferences.setString(
-                                  //                         ApiStrings.serviceID,
-                                  //                         serviceData[index]
-                                  //                             .serviceId!);
-                                  //                     preferences.setString(
-                                  //                         ApiStrings.catID,
-                                  //                         serviceData[index]
-                                  //                             .catId!);
-                                  //                     preferences.setString(
-                                  //                         ApiStrings.productQty,
-                                  //                         "${serviceData[index].itemQuantity}");
-                                  //                     // addedItem =
-                                  //                     //     await addToCartController
-                                  //                     //         .addToCart();
-                                  //                     // debugPrint(
-                                  //                     //     "${addedItem.toString()} this is the debug print");
-                                  //                     // print(
-                                  //                     //     "Ths is the cart it of your product ${serviceData[index].serviceName}");
-                                  //                     // print(addToCartController
-                                  //                     //     .cartTrueFalse(
-                                  //                     //         serviceData[index]
-                                  //                     //             .serviceName!));
-                                  //                     // await addToCartController
-                                  //                     //         .cartTrueFalse(
-                                  //                     //             serviceData[index]
-                                  //                     //                 .serviceName!)
-                                  //                     //     ? print(
-                                  //                     //         "This car item is add on the cart")
-                                  //                     //     : print(
-                                  //                     //         "The product not available on the cart section");
-                                  //                     // .then((v) => print(
-                                  //                     //     "${v} Thisi is the future tye of cart added on the addt cart item or not"));
-                                  //                     // print(
-                                  //                     //     "${} ");
-                                  //                     Future.delayed(Duration.zero,
-                                  //                         () {
-                                  //                       addToCartController
-                                  //                           .addToCart();
-                                  //                     });
-                                  //                     refresh();
-                                  //                   },
-                                  //                   child: Container(
-                                  //                     height: 40,
-                                  //                     width: 40,
-                                  //                     padding: EdgeInsets.zero,
-                                  //                     margin: EdgeInsets.only(
-                                  //                         left: 20, right: 20,top: 0,bottom: 0),
-                                  //                     alignment: Alignment.center,
-                                  //                     decoration: BoxDecoration(
-                                  //                         color: primaryColor,
-                                  //                         borderRadius:
-                                  //                             BorderRadius.circular(
-                                  //                                 8.0)),
-                                  //                     child: Text(
-                                  //                       "Add",
-                                  //                       style: TextStyle(
-                                  //                         color: Colors.white,
-                                  //                         fontSize:
-                                  //                             Theme.of(context)
-                                  //                                 .textTheme
-                                  //                                 .headlineSmall!
-                                  //                                 .fontSize,
-                                  //                       ),
-                                  //                     ),
-                                  //                   ),
-                                  //                 ),
-                                  //               ),
-                                  //       ),
-                                  //     ],
-                                  //   ),
-                                
-                                  //   // : InkWell(
-                                  //   //     onTap: () async {
-                                  //   //       // SharedPreferences preferences =
-                                  //   //       //     await SharedPreferences
-                                  //   //       //         .getInstance();
-                                  //   //       // preferences.setString(
-                                  //   //       //     ApiStrings.serviceID,
-                                  //   //       //     serviceData[index].serviceId!);
-                                  //   //       // preferences.setString(
-                                  //   //       //     ApiStrings.catID,
-                                  //   //       //     serviceData[index].catId!);
-                                  //   //       // preferences.setString(
-                                  //   //       //     ApiStrings.productQty,
-                                  //   //       //     "${serviceData[index].itemQuantity}");
-                                  //   //       // addedItem =
-                                  //   //       //     await addToCartController
-                                  //   //       //         .addToCart();
-                                  //   //       // debugPrint(
-                                  //   //       //     "${addedItem.toString()} this is the debug print");
-                                  //   //       // print(
-                                  //   //       //     "Ths is the cart it of your product ${serviceData[index].serviceName}");
-                                  //   //       await addToCartController
-                                  //   //               .CartTrueFalse(
-                                  //   //                   serviceData[index]
-                                  //   //                       .serviceName!)
-                                  //   //           ? print(
-                                  //   //               "This car item is add on the cart")
-                                  //   //           : print(
-                                  //   //               "The product not available on the cart section");
-                                  //   //       // .then((v) => print(
-                                  //   //       //     "${v} Thisi is the future tye of cart added on the addt cart item or not"));
-                                  //   //       // print(
-                                  //   //       //     "${} ");
-                                  //   //       // Future.delayed(Duration.zero, () {
-                                  //   //       //   addToCartController.addToCart();
-                                  //   //       // });
-                                  //   //       refresh();
-                                  //   //     },
-                                  //   //     child: Container(
-                                  //   //       height: 40,
-                                  //   //       width: 40,
-                                  //   //       alignment: Alignment.center,
-                                  //   //       decoration: BoxDecoration(
-                                  //   //           color: primaryColor,
-                                  //   //           borderRadius:
-                                  //   //               BorderRadius.circular(
-                                  //   //                   8.0)),
-                                  //   //       child: Icon(
-                                  //   //         Icons.add_shopping_cart_rounded,
-                                  //   //         color: Colors.white,
-                                  //   //         size: Theme.of(context)
-                                  //   //             .textTheme
-                                  //   //             .headlineLarge!
-                                  //   //             .fontSize,
-                                  //   //       ),
-                                  //   //     ),
-                                  //   //   ),
-                                  // ),
-                                
-                                );
-                              },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Image.network(
+                        "${ApiEndPoint.imageAPI}/${item.serviceImage}",
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              strokeWidth: 2,
+                              color: primaryColor.withOpacity(0.3),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) => Center(
+                          child: Opacity(
+                            opacity: 0.5,
+                            child: Image.asset(
+                              "assets/images/no_image.jpg",
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
                       ),
-              );
-      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // Content Section
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.serviceName ?? "",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.blueGrey.shade900,
+                            height: 1.2,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '₹${item.amount}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (item.serviceDetails != null &&
+                            item.serviceDetails!.isNotEmpty)
+                          Html(
+                            data: item.serviceDetails!.length > 80
+                                ? "${item.serviceDetails!.substring(0, 75)}..."
+                                : item.serviceDetails!,
+                            style: {
+                              "body": Style(
+                                color: Colors.blueGrey.shade500,
+                                fontSize: FontSize(11.0),
+                                margin: Margins.zero,
+                                padding: HtmlPaddings.zero,
+                                maxLines: 2,
+                                textOverflow: TextOverflow.ellipsis,
+                              ),
+                            },
+                          ),
+                        const Spacer(),
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child:
+                              _buildCartControls(context, item, isInCart, qty),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
-    //;
+  }
+
+  Widget _buildCartControls(
+      BuildContext context, ServiceList item, bool isInCart, String qty) {
+    if (!isInCart) {
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          gradient: LinearGradient(
+            colors: [primaryColor, primaryColor.withOpacity(0.8)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primaryColor.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString(ApiStrings.serviceID, item.serviceId!);
+              prefs.setString(ApiStrings.catID, item.catId!);
+              prefs.setString(ApiStrings.productQty, "1");
+              addToCartController.addToCart();
+              refresh();
+            },
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              child: const Text(
+                "ADD",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: primaryColor.withOpacity(0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildIconButton(
+            icon: Icons.remove,
+            onPressed: () async {
+              int currentQty = int.parse(qty);
+              if (currentQty <= 1) {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                String? cartId = await checkCartId(item.serviceId.toString());
+                if (cartId != null) {
+                  prefs.setString(ApiStrings.cartID, cartId);
+                  addToCartController.deletItemFrmCart();
+                }
+              } else {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                prefs.setString(ApiStrings.serviceID, item.serviceId!);
+                prefs.setString(ApiStrings.catID, item.catId!);
+                prefs.setString(
+                    ApiStrings.productQty, (currentQty - 1).toString());
+                addToCartController.addToCart();
+              }
+              refresh();
+            },
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              qty,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 16,
+                color: primaryColor,
+              ),
+            ),
+          ),
+          _buildIconButton(
+            icon: Icons.add,
+            isPrimary: true,
+            onPressed: () async {
+              int currentQty = int.parse(qty);
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              prefs.setString(ApiStrings.serviceID, item.serviceId!);
+              prefs.setString(ApiStrings.catID, item.catId!);
+              prefs.setString(
+                  ApiStrings.productQty, (currentQty + 1).toString());
+              addToCartController.addToCart();
+              refresh();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton(
+      {required IconData icon,
+      required VoidCallback onPressed,
+      bool isPrimary = false}) {
+    return Material(
+      color: isPrimary ? primaryColor : Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      elevation: isPrimary ? 2 : 0,
+      shadowColor: primaryColor.withOpacity(0.3),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon,
+              color: isPrimary ? Colors.white : primaryColor, size: 18),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomCartBar(
+      BuildContext context, CartController cartController) {
+    if (cartController.cartDetailsDataModel.value.messages?.status?.allCart ==
+            null ||
+        cartController
+            .cartDetailsDataModel.value.messages!.status!.allCart!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final int count = cartController
+        .cartDetailsDataModel.value.messages!.status!.allCart!.length;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryColor, primaryColor.withBlue(200)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => Get.to(() => const CartScreen()),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Remix.shopping_bag_3_line,
+                  color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "$count ${count == 1 ? 'Item' : 'Items'} Added",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  "View Cart Details",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            const Text(
+              "GO TO CART",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: Colors.white, size: 14),
+          ],
+        ),
+      ),
+    );
   }
 }
