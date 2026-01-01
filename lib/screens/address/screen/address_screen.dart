@@ -295,18 +295,18 @@ class _AddressScreenState extends State<AddressScreen> {
                     ),
                   ),
                 ),
-                if (isSelected) ...[
-                  const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(Remix.check_line, color: primaryColor),
-                  )
-                ]
+                // if (isSelected) ...[
+                //   const SizedBox(width: 12),
+                //   Container(
+                //     padding: const EdgeInsets.symmetric(
+                //         horizontal: 12, vertical: 12),
+                //     decoration: BoxDecoration(
+                //       color: primaryColor.withOpacity(0.1),
+                //       borderRadius: BorderRadius.circular(12),
+                //     ),
+                //     child: Icon(Remix.check_line, color: primaryColor),
+                //   )
+                // ]
               ],
             ),
           ],

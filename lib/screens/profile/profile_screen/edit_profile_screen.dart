@@ -76,28 +76,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () {
-                      // Handle image pick
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: primaryColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(
-                        Remix.camera_line,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
+                // Positioned(
+                //   bottom: 0,
+                //   right: 0,
+                //   child: GestureDetector(
+                //     onTap: () {
+                //       // Handle image pick
+                //       // profileController.pickImage();
+                //     },
+                //     child: Container(
+                //       padding: const EdgeInsets.all(8),
+                //       decoration: BoxDecoration(
+                //         color: primaryColor,
+                //         shape: BoxShape.circle,
+                //         border: Border.all(color: Colors.white, width: 2),
+                //       ),
+                //       child: const Icon(
+                //         Remix.camera_line,
+                //         color: Colors.white,
+                //         size: 18,
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 32),

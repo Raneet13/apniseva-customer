@@ -98,12 +98,14 @@ class _DashScreenState extends State<DashScreen> {
                         getData: dashController
                             .dashDataModel.value.messages!.status!.categoryDtl!,
                       ),
-                      SizedBox(height: height * 0.02),
+                      // SizedBox(height: height * 0.02),
+                      Divider(),
                       DashCarousel(
                         getData: dashController
                             .dashDataModel.value.messages!.status!.offerDtl!,
                       ),
-                      SizedBox(height: height * 0.02),
+                      Divider(),
+                      // SizedBox(height: height * 0.02),
                       // Align(
                       //     alignment: Alignment.centerLeft,
                       //     child: Text(

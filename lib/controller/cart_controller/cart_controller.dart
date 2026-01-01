@@ -298,6 +298,7 @@ class CartController extends GetxController {
     print(gstTextController.text);
     fetch.value = false;
   }
+
   checkOut() async {
     CheckOutDataModel checkOutModel = CheckOutDataModel();
 
