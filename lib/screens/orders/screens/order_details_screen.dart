@@ -206,15 +206,16 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
                   ),
                 ],
               ),
-              if (otherDtl.verifyOtp != null)
-                _buildOtpBadge(otherDtl.verifyOtp!),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Icon(Remix.calendar_check_line,
-                  size: 16, color: Colors.blueGrey.shade300),
+              Icon(
+                Remix.calendar_check_line,
+                size: 16,
+                color: Colors.blueGrey.shade300,
+              ),
               const SizedBox(width: 8),
               Text(
                 otherDtl.bookingDate ?? "",
@@ -224,8 +225,14 @@ class _OrderBookingDetailsState extends State<OrderBookingDetails> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
+
+              // Push OTP badge to the right
+              const Spacer(),
+
+              if (otherDtl.verifyOtp != null)
+                _buildOtpBadge(otherDtl.verifyOtp!),
             ],
-          ),
+          )
         ],
       ),
     );
