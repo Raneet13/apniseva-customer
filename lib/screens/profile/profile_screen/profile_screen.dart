@@ -66,20 +66,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    margin: const EdgeInsets.all(4),
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: const Icon(
-                      Remix.shield_check_fill,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                  ),
+                  // Container(
+                  //   margin: const EdgeInsets.all(4),
+                  //   padding: const EdgeInsets.all(6),
+                  //   decoration: BoxDecoration(
+                  //     color: primaryColor,
+                  //     shape: BoxShape.circle,
+                  //     border: Border.all(color: Colors.white, width: 2),
+                  //   ),
+                  //   child: const Icon(
+                  //     Remix.shield_check_fill,
+                  //     color: Colors.white,
+                  //     size: 14,
+                  //   ),
+                  // ),
                 ],
               ),
             ),

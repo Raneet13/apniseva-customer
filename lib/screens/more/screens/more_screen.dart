@@ -267,26 +267,26 @@ class _MoreScreenState extends State<MoreScreen>
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Remix.check_line,
-                        size: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                  // Positioned(
+                  //   bottom: 0,
+                  //   right: 0,
+                  //   child: Container(
+                  //     padding: const EdgeInsets.all(6),
+                  //     decoration: BoxDecoration(
+                  //       color: const Color(0xFF10B981),
+                  //       shape: BoxShape.circle,
+                  //       border: Border.all(
+                  //         color: Colors.white,
+                  //         width: 2,
+                  //       ),
+                  //     ),
+                  //     child: const Icon(
+                  //       Remix.check_line,
+                  //       size: 14,
+                  //       color: Colors.white,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
               const SizedBox(height: 16),
