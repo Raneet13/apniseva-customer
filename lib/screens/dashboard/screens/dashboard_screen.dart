@@ -1,3 +1,4 @@
+//dashboard_screen.dart
 import 'package:apniseva/controller/auth_controller/auth_controller.dart';
 import 'package:apniseva/controller/dashboard_controller/dash_controller.dart';
 import 'package:apniseva/screens/dashboard/sections/dash_reviews.dart';
@@ -36,26 +37,30 @@ class _DashScreenState extends State<DashScreen> {
     super.initState();
   }
 
-  checkUserLoc() async {
+  Future<void> checkUserLoc() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? otp = preferences.getString(ApiStrings.otp);
     String? cityID = preferences.getString(ApiStrings.cityID);
 
-    if (cityID!.isEmpty) {
-      Future.delayed(Duration.zero, () {
-        authController.getUserData();
-      });
+    // ✅ Safe null check (replace cityID!.isEmpty with null-aware check)
+    if (cityID == null || cityID.isEmpty) {
+      // Only call getUserData() if NOT a guest
+      final bool isGuest = await authController.isGuestUser();
 
-      preferences.getString(ApiStrings.cityID);
-      showDialog(
+      if (!isGuest) {
+        await authController.getUserData();
+      }
+
+      // Show location dialog
+      if (mounted) {
+        showDialog(
           context: context,
-          builder: (context) {
-            return const GetLocation();
-          });
+          builder: (context) => const GetLocation(),
+        );
+      }
     } else {
-      Future.delayed(Duration.zero, () {
-        dashController.getDashboard();
-      });
+      // Load dashboard data
+      dashController.getDashboard();
     }
   }
 

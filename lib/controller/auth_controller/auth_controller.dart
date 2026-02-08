@@ -1,3 +1,4 @@
+//auth_controller.dart
 import 'dart:convert';
 
 import 'package:apniseva/model/auth_model/user_data_model.dart';
@@ -61,38 +62,64 @@ class AuthController extends GetxController {
     otpController.clear();
   }
 
-  getUserData() async {
+// auth_controller.dart
+  Future<bool> getUserData() async {
     isLoading.value = true;
     UserDataModel model = UserDataModel();
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String mobile = pref.getString(ApiStrings.mobile)!;
-    String verifyOtp = ApiEndPoint.verifyOtp;
 
-    Map<String, String> header = {
-      'Content-type': 'application/json',
-    };
-    Map<String, String> body = {'contact': mobile};
-    debugPrint('UserDataApi: $verifyOtp');
+    try {
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      String? mobile = pref.getString(ApiStrings.mobile);
 
-    http.Response response = await http.post(Uri.parse(verifyOtp),
-        body: jsonEncode(body), headers: header);
-    // debugPrint("GetUserResponse: ${response.body}");
-    model = userDataModelFromJson(response.body);
+      // ✅ Handle case where mobile is null
+      if (mobile == null) {
+        isLoading.value = false;
+        return false;
+      }
 
-    if (response.statusCode == 200 && model.status == 200) {
-      userModel.value = model;
-      pref.setString(
-          ApiStrings.userID, userModel.value.messages!.status!.userId!);
-      String? userID = pref.getString(ApiStrings.userID);
-      debugPrint("User Id ${userModel.value.messages!.status!.userId!}");
+      String verifyOtp = ApiEndPoint.verifyOtp;
+
+      Map<String, String> header = {
+        'Content-type': 'application/json',
+      };
+      Map<String, String> body = {'contact': mobile};
+
+      http.Response response = await http.post(
+        Uri.parse(verifyOtp),
+        body: jsonEncode(body),
+        headers: header,
+      );
+
+      model = userDataModelFromJson(response.body);
+
+      if (response.statusCode == 200 && model.status == 200) {
+        // ✅ Safe null checks for userId
+        final userId = model.messages?.status?.userId;
+        if (userId != null) {
+          pref.setString(ApiStrings.userID, userId);
+          debugPrint("User Id $userId");
+        }
+        isLoading.value = false;
+        return true;
+      } else {
+        isLoading.value = false;
+        return false;
+      }
+    } catch (e) {
       isLoading.value = false;
-      return true;
+      debugPrint("Error in getUserData: $e");
+      return false;
     }
   }
 
   clear() {
     mobileController.clear();
     otpController.clear();
+  }
+
+  Future<bool> isGuestUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('isGuest') ?? false;
   }
 
   Future<bool> updateUserData(

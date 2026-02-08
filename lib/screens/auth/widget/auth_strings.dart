@@ -9,4 +9,5 @@ class AuthString {
   static String otpVerification = 'OTP Verification';
   static String enterOTP = 'Enter OTP sent to your mobile no';
   static String submit = 'SUBMIT';
+  static String guestUserButtonTitle = 'CONTINUE AS GUEST USER';
 }

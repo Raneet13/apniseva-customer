@@ -1,6 +1,9 @@
+// registration_screen.dart
 import 'package:apniseva/controller/auth_controller/auth_controller.dart';
+import 'package:apniseva/screens/location/screen/location_screen.dart';
 import 'package:apniseva/screens/notification/localNotification.dart';
 import 'package:apniseva/screens/splash_screen/widgets/spalsh_string.dart';
+import 'package:apniseva/utils/bottom_nav_bar.dart';
 import 'package:apniseva/utils/buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -295,12 +298,66 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       );
                               }),
                             ),
+                            SizedBox(height: 25),
+                            Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "----   OR   ----",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 18,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 25),
+                            Center(
+                              child: TextButton(
+                                onPressed: () async {
+                                  // ✅ Set guest flag
+                                  SharedPreferences prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.setBool(
+                                      'isGuest', true); // Mark as guest
+
+                                  // ✅ Check if city is selected
+                                  String? cityID =
+                                      prefs.getString(ApiStrings.cityID);
+
+                                  if (cityID == null) {
+                                    debugPrint(
+                                        "!!!!!---- No city selected, navigating to location screen.");
+                                    // No city selected → Go to city selection
+                                    Get.offAll(
+                                        () => const MainLocationScreen());
+                                  } else {
+                                    // City already selected → Go to dashboard
+                                    Get.offAll(() => const BottomNavBar());
+                                  }
+                                },
+                                child: Text(
+                                  AuthString.guestUserButtonTitle,
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
+                                    // ignore: deprecated_member_use
+                                    color: primaryColor.withOpacity(0.7),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
                 ),
+                SizedBox(height: height * 0.75),
 
                 // Footer
                 Positioned(

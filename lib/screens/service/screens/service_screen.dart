@@ -1,6 +1,8 @@
+
 import 'package:apniseva/controller/cart_controller/cart_controller.dart';
 import 'package:apniseva/controller/service_controller/service_controller.dart';
 import 'package:apniseva/model/service_model/service_model.dart';
+import 'package:apniseva/screens/auth/screens/registration_screen.dart';
 import 'package:apniseva/screens/service/sections/service_appbar.dart';
 import 'package:apniseva/screens/service/sections/service_strings.dart';
 import 'package:apniseva/utils/api_endpoint_strings/api_endpoint_strings.dart';
@@ -31,6 +33,18 @@ class _ServiceScreenState extends State<ServiceScreen> {
   void initState() {
     service();
     super.initState();
+  }
+
+  // ✅ CENTRALIZED GUEST USER CHECK FUNCTION
+  Future<bool> _checkGuestAccess() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isGuest = prefs.getBool('isGuest') ?? true;
+
+    if (isGuest) {
+      Get.offAll(() => const RegistrationScreen());
+      return true; // Indicates we redirected (stop further execution)
+    }
+    return false; // User is logged in (continue execution)
   }
 
   service() async {
@@ -364,10 +378,14 @@ class _ServiceScreenState extends State<ServiceScreen> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () async {
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.setString(ApiStrings.serviceID, item.serviceId!);
-              prefs.setString(ApiStrings.catID, item.catId!);
-              prefs.setString(ApiStrings.productQty, "1");
+              // ✅ CENTRALIZED GUEST CHECK
+              if (await _checkGuestAccess()) return;
+
+              // ✅ Only proceed if logged in
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString(ApiStrings.serviceID, item.serviceId!);
+              await prefs.setString(ApiStrings.catID, item.catId!);
+              await prefs.setString(ApiStrings.productQty, "1");
               addToCartController.addToCart();
               refresh();
             },
@@ -399,28 +417,41 @@ class _ServiceScreenState extends State<ServiceScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildIconButton(
-            icon: Icons.remove,
-            onPressed: () async {
-              int currentQty = int.parse(qty);
-              if (currentQty <= 1) {
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-                String? cartId = await checkCartId(item.serviceId.toString());
-                if (cartId != null) {
-                  prefs.setString(ApiStrings.cartID, cartId);
-                  addToCartController.deletItemFrmCart();
+          // MINUS BUTTON
+          Material(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(12),
+            elevation: 2,
+            shadowColor: primaryColor.withOpacity(0.3),
+            child: InkWell(
+              onTap: () async {
+                // ✅ CENTRALIZED GUEST CHECK
+                if (await _checkGuestAccess()) return;
+
+                final prefs = await SharedPreferences.getInstance();
+                int currentQty = int.parse(qty);
+
+                if (currentQty <= 1) {
+                  final cartId = await checkCartId(item.serviceId.toString());
+                  if (cartId != null) {
+                    await prefs.setString(ApiStrings.cartID, cartId);
+                    addToCartController.deletItemFrmCart();
+                  }
+                } else {
+                  await prefs.setString(
+                      ApiStrings.productQty, (currentQty - 1).toString());
+                  addToCartController.addToCart();
                 }
-              } else {
-                SharedPreferences prefs = await SharedPreferences.getInstance();
-                prefs.setString(ApiStrings.serviceID, item.serviceId!);
-                prefs.setString(ApiStrings.catID, item.catId!);
-                prefs.setString(
-                    ApiStrings.productQty, (currentQty - 1).toString());
-                addToCartController.addToCart();
-              }
-              refresh();
-            },
+                refresh();
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                child: const Icon(Icons.remove, color: Colors.white, size: 18),
+              ),
+            ),
           ),
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
@@ -432,42 +463,33 @@ class _ServiceScreenState extends State<ServiceScreen> {
               ),
             ),
           ),
-          _buildIconButton(
-            icon: Icons.add,
-            isPrimary: true,
-            onPressed: () async {
-              int currentQty = int.parse(qty);
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              prefs.setString(ApiStrings.serviceID, item.serviceId!);
-              prefs.setString(ApiStrings.catID, item.catId!);
-              prefs.setString(
-                  ApiStrings.productQty, (currentQty + 1).toString());
-              addToCartController.addToCart();
-              refresh();
-            },
+
+          // PLUS BUTTON
+          Material(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(12),
+            elevation: 2,
+            shadowColor: primaryColor.withOpacity(0.3),
+            child: InkWell(
+              onTap: () async {
+                // ✅ CENTRALIZED GUEST CHECK
+                if (await _checkGuestAccess()) return;
+
+                final prefs = await SharedPreferences.getInstance();
+                int currentQty = int.parse(qty);
+                await prefs.setString(
+                    ApiStrings.productQty, (currentQty + 1).toString());
+                addToCartController.addToCart();
+                refresh();
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                child: const Icon(Icons.add, color: Colors.white, size: 18),
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildIconButton(
-      {required IconData icon,
-      required VoidCallback onPressed,
-      bool isPrimary = false}) {
-    return Material(
-      color: isPrimary ? primaryColor : Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      elevation: isPrimary ? 2 : 0,
-      shadowColor: primaryColor.withOpacity(0.3),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          child: Icon(icon,
-              color: isPrimary ? Colors.white : primaryColor, size: 18),
-        ),
       ),
     );
   }
@@ -501,7 +523,12 @@ class _ServiceScreenState extends State<ServiceScreen> {
         ],
       ),
       child: InkWell(
-        onTap: () => Get.to(() => const CartScreen()),
+        onTap: () async {
+          // ✅ CENTRALIZED GUEST CHECK
+          if (await _checkGuestAccess()) return;
+
+          Get.to(() => const CartScreen());
+        },
         child: Row(
           children: [
             Container(

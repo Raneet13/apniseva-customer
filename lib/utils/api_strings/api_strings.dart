@@ -6,6 +6,7 @@ class ApiStrings {
   static String cityName = 'city_name';
   static String cityID = 'loc_id';
   static String otp = 'login_otp';
+  static String guestUserID = '0';
 
   static String orderID = 'order_id';
   static String catID = 'cat_id';

@@ -65,6 +65,7 @@ class CartController extends GetxController {
       String? productQty = preferences.getString(ApiStrings.productQty);
 
       String? addToCartAPI = ApiEndPoint.addToCart;
+      debugPrint("!!!--- Add To Cart API URL: $addToCartAPI");
       userId = userID!;
       Map<String, String> body = {
         'user_id': userID,
@@ -115,6 +116,7 @@ class CartController extends GetxController {
       addressID = addressIDPref;
 
       String? cartAPI = ApiEndPoint.cartDetails;
+      debugPrint("!!!--- Cart Details API URL: $cartAPI");
 
       Map<String, String> body = {'user_id': userID!, 'city_id': cityID!};
 
@@ -201,7 +203,7 @@ class CartController extends GetxController {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? cartID = preferences.getString(ApiStrings.cartID);
     String? removeItemAPI = ApiEndPoint.removeItems;
-
+    debugPrint("!!!--- Remove Item API URL: $removeItemAPI");
     Map<String, String> body = {'cart_id': cartID!};
 
     Map<String, String> headers = {
@@ -232,7 +234,9 @@ class CartController extends GetxController {
     String? cityID = preferences.getString(ApiStrings.cityID);
     String? couponCode = couponTextController.text;
     String? couponAPI = ApiEndPoint.applyCoupon;
-
+    debugPrint("!!!--- Apply Coupon API URL: $couponAPI");
+    debugPrint(
+        "!!!--- Applying Coupon Code: $couponCode for User ID: $userID in City ID: $cityID");
     Map<String, String> body = {
       'user_id': userID!,
       'city_id': cityID!,
@@ -308,6 +312,7 @@ class CartController extends GetxController {
     String? gstAmount = preferences.getString(ApiStrings.gstAmount);
     String? addressID = preferences.getString(ApiStrings.addressID);
     String? checkOutAPI = ApiEndPoint.checkout;
+    debugPrint("!!!--- Checkout API URL: $checkOutAPI");
     // print(
     //     "payment:${paymentMode!}, date:${dateController.text},time:${timeController.text},price:${price.toString()},qty:${qty.toString()},image:${image.toString()},addressId:${addressID!},product name:${productName.toString()}");
     // print("paymentMode:${paymentMode!}, paymentId:${payment_id ?? ""},");
@@ -378,7 +383,7 @@ class CartController extends GetxController {
       SharedPreferences preferences = await SharedPreferences.getInstance();
       String? orderID = preferences.getString(ApiStrings.orderID);
       String? resheduleApi = ApiEndPoint.reshedule;
-
+      debugPrint("!!!--- Reschedule API URL: $resheduleApi");
       Map<String, dynamic> body = {
         'orderid': orderID!,
         'rdate': date,
@@ -410,6 +415,7 @@ class CartController extends GetxController {
     String? cartID = preferences.getString(ApiStrings.cartID);
     String? removeItemAPI = ApiEndPoint.removeItems;
     print(cartID);
+    debugPrint("!!!--- Remove Item API URL: $removeItemAPI");
     Map<String, String> body = {'cart_id': cartID!};
 
     Map<String, String> headers = {

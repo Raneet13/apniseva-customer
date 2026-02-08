@@ -1,3 +1,4 @@
+//location.dart
 import 'package:apniseva/controller/dashboard_controller/dash_controller.dart';
 import 'package:apniseva/controller/location_controller/location_controller.dart';
 import 'package:apniseva/utils/api_strings/api_strings.dart';
@@ -256,19 +257,12 @@ class _GetLocationState extends State<GetLocation>
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF1F2937),
                               ),
-                              items: locController
-                                  .locationModel.value.messages?.status!.city!
-                                  .map((items) {
+
+                              // ✅ FIXED: Use clean citiesList instead of nested model chains
+                              items: locController.citiesList.map((city) {
                                 return DropdownMenuItem<String>(
-                                  onTap: () async {
-                                    SharedPreferences preferences =
-                                        await SharedPreferences.getInstance();
-                                    preferences.setString(ApiStrings.cityID,
-                                        items.cityId.toString());
-                                    preferences.setString(ApiStrings.cityName,
-                                        items.cityName.toString());
-                                  },
-                                  value: items.cityName,
+                                  // ❌ REMOVED the buggy onTap here! It was running when menu opened
+                                  value: city.cityName,
                                   child: Row(
                                     children: [
                                       Icon(
@@ -278,7 +272,7 @@ class _GetLocationState extends State<GetLocation>
                                       ),
                                       const SizedBox(width: 12),
                                       Text(
-                                        items.cityName!,
+                                        city.cityName ?? "Unknown City",
                                         style: GoogleFonts.inter(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w500,
@@ -289,10 +283,25 @@ class _GetLocationState extends State<GetLocation>
                                   ),
                                 );
                               }).toList(),
+
+                              // ✅ Correct place to save selection
                               onChanged: (String? newValue) async {
-                                setState(() {
-                                  getLocation = newValue!;
-                                });
+                                if (newValue == null) return;
+
+                                // Update UI
+                                setState(() => getLocation = newValue);
+
+                                // Save to SharedPreferences only when user selects an item
+                                final selectedCity =
+                                    locController.citiesList.firstWhere(
+                                  (city) => city.cityName == newValue,
+                                );
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                await prefs.setString(ApiStrings.cityID,
+                                    selectedCity.cityId ?? "");
+                                await prefs.setString(ApiStrings.cityName,
+                                    selectedCity.cityName ?? "");
                               },
                             ),
                           ),

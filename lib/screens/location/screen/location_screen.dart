@@ -1,3 +1,4 @@
+// location_screen.dart
 import 'package:apniseva/utils/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,10 +27,21 @@ class _MainLocationScreenState extends State<MainLocationScreen> {
 
   @override
   void initState() {
-    Future.delayed(Duration.zero, () {
-      locController.getLoc();
-    });
     super.initState();
+    _loadSavedLocation();
+
+    // ✅ Correct updated check using citiesList
+    if (locController.citiesList.isEmpty) {
+      locController.getLoc();
+    }
+  }
+
+  Future<void> _loadSavedLocation() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      getLocation = prefs.getString(ApiStrings.cityName);
+      debugPrint("Loaded saved location: $getLocation");
+    });
   }
 
   checkLocation() async {
@@ -38,120 +50,122 @@ class _MainLocationScreenState extends State<MainLocationScreen> {
     if (cityID == null) {
       Get.snackbar('Location', 'Choose your Location');
     } else {
-      Get.to(() => const BottomNavBar());
+      // ✅ Proceed to dashboard
+      Get.offAll(() => const BottomNavBar());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
-
     return Scaffold(
-      body: Container(
-        width: width,
-        height: height,
-        alignment: Alignment.center,
-        child: Obx(() {
-          return Card(
-            elevation: 10,
-            child: Container(
-              width: width * 0.85,
-              height: 160,
-              padding:
-                  const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
-              decoration: BoxDecoration(
-                  color: Colors.white70,
-                  borderRadius: BorderRadius.circular(8.0)),
-              child: locController.isLoading.value == true ||
-                      locController.locationModel.value.status == 400
-                  ? Center(
-                      child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5.0),
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).primaryColor,
-                        strokeWidth: 2.5,
-                      ),
-                    ))
-                  : Column(
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Choose Location',
-                            style: Theme.of(context).textTheme.headlineLarge,
-                          ),
-                        ),
-                        Container(
-                          height: 47,
-                          margin: const EdgeInsets.symmetric(vertical: 5),
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(10)),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton(
-                              hint: const Text('Choose your Location'),
-                              value: getLocation,
-                              isExpanded: true,
-                              icon: const Icon(Icons.keyboard_arrow_down),
-                              items: locController
-                                  .locationModel.value.messages!.status!.city!
-                                  .map((items) {
-                                return DropdownMenuItem(
-                                  onTap: () async {
-                                    SharedPreferences preferences =
-                                        await SharedPreferences.getInstance();
-                                    preferences.setString(ApiStrings.cityID,
-                                        items.cityId.toString());
-                                    preferences.setString(ApiStrings.cityName,
-                                        items.cityName.toString());
-                                  },
-                                  value: items.cityName,
-                                  child: Text(
-                                    items.cityName!,
-                                    style:
-                                        Theme.of(context).textTheme.labelMedium,
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (String? newValue) async {
-                                setState(() {
-                                  getLocation = newValue!;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                        PrimaryButton(
-                          width: double.maxFinite,
-                          height: 47,
-                          onPressed: () async {
-                            SharedPreferences preferences =
-                                await SharedPreferences.getInstance();
-                            String? cityName =
-                                preferences.getString(ApiStrings.cityName);
-                            getLocation = cityName;
-                            dashController.getDashboard();
-                            debugPrint(getLocation);
-                            checkLocation();
-                            // Get.to(()=> const BottomNavBar());
-                          },
-                          child: const Text(
-                            'SAVE',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        )
-                      ],
-                    ),
+      body: Obx(() {
+        if (locController.isLoading.value) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(strokeWidth: 3),
+                SizedBox(height: 16),
+                Text("Loading locations..."),
+              ],
             ),
           );
-        }),
-      ),
+        }
+
+        // If no cities loaded
+        if (locController.citiesList.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("No cities found"),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: locController.getLoc,
+                  child: const Text("Retry"),
+                )
+              ],
+            ),
+          );
+        }
+
+        // ✅ Main UI - Location Picker
+        return Center(
+          child: Card(
+            elevation: 12,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Choose Location",
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Dropdown
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: getLocation,
+                        hint: const Text("Select your city"),
+                        isExpanded: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        items: locController.citiesList.map((city) {
+                          return DropdownMenuItem(
+                            value: city.cityName,
+                            child: Text(city.cityName ?? ""),
+                          );
+                        }).toList(),
+                        onChanged: (value) async {
+                          setState(() => getLocation = value);
+
+                          final selected = locController.citiesList
+                              .firstWhere((c) => c.cityName == value);
+
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+
+                          await prefs.setString(
+                              ApiStrings.cityID, selected.cityId ?? "");
+                          await prefs.setString(
+                              ApiStrings.cityName, selected.cityName ?? "");
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Save Button
+                  PrimaryButton(
+                    width: double.infinity,
+                    height: 50,
+                    onPressed: () {
+                      if (getLocation == null) {
+                        Get.snackbar("Error", "Please select a location");
+                      } else {
+                        dashController.getDashboard();
+                        checkLocation();
+                      }
+                    },
+                    child: const Text("SAVE",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }

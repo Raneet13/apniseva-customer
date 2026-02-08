@@ -1,3 +1,4 @@
+//address_form_screen.dart
 import 'package:apniseva/controller/address_controller/address_controller.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:flutter/material.dart';
@@ -578,21 +579,11 @@ class _AddressFormScreenState extends State<AddressFormScreen>
                       ),
                     ),
                     dropdownColor: Colors.white,
-                    items: locController
-                        .locationModel.value.messages?.status!.city!
-                        .map((items) {
+                    items: locController.citiesList.map((city) {
                       return DropdownMenuItem<String>(
-                        onTap: () async {
-                          SharedPreferences preferences =
-                              await SharedPreferences.getInstance();
-                          preferences.setString(
-                              ApiStrings.cityID, items.cityId.toString());
-                          preferences.setString(
-                              ApiStrings.cityName, items.cityName.toString());
-                        },
-                        value: items.cityName,
+                        value: city.cityName,
                         child: Text(
-                          items.cityName!,
+                          city.cityName ?? "Unknown",
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,

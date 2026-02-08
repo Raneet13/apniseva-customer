@@ -21,6 +21,7 @@ class ServiceController extends GetxController {
       String? categoryID = preferences.getString(ApiStrings.catID);
 
       String? serviceAPI = ApiEndPoint.service;
+      debugPrint("!!!--- Service API: $serviceAPI");
 
       Map<String, String> body = {
         'user_id': userID!,
