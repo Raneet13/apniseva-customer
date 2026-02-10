@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../controller/auth_controller/auth_controller.dart';
+import '../../auth/controller/auth_controller.dart';
 import '../../../utils/color.dart';
 import '../../address/screen/address_screen.dart';
 import '../../auth/screens/registration_screen.dart';

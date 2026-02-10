@@ -1,4 +1,4 @@
-import 'package:apniseva/controller/order_controller/order_controller.dart';
+import 'package:apniseva/screens/orders/order_controller/order_controller.dart';
 import 'package:apniseva/utils/api_strings/api_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

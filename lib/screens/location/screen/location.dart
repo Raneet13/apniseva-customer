@@ -1,6 +1,6 @@
-//location.dart
-import 'package:apniseva/controller/dashboard_controller/dash_controller.dart';
-import 'package:apniseva/controller/location_controller/location_controller.dart';
+//lib/screens/location/screen/location.dart
+import 'package:apniseva/features/dashboard/controller/dash_controller.dart';
+import 'package:apniseva/screens/location/lcontroller/location_controller.dart';
 import 'package:apniseva/utils/api_strings/api_strings.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:flutter/material.dart';

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 
-import '../../../controller/cart_controller/cart_controller.dart';
+import '../cart_controller/cart_controller.dart';
 
 class ApplyGstbill extends StatefulWidget {
   const ApplyGstbill({

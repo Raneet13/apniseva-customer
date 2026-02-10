@@ -1,4 +1,4 @@
-import 'package:apniseva/controller/order_details_controller/order_details_controller.dart';
+import 'package:apniseva/screens/orders/order_controller/order_details_controller.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -9,7 +9,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../controller/cart_controller/cart_controller.dart';
+import '../../cart/cart_controller/cart_controller.dart';
 import '../../../utils/api_strings/api_strings.dart';
 import '../../../utils/input_field.dart';
 

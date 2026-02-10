@@ -1,5 +1,4 @@
 .
-├── OneNote Table Of Contents.onetoc2
 ├── README.md
 ├── analysis_options.yaml
 ├── android
@@ -84,26 +83,18 @@
 │   └── RunnerTests
 │       └── RunnerTests.swift
 ├── lib
+│   ├── app
 │   ├── background
 │   │   └── background_service.dart
 │   ├── controller
-│   │   ├── address_controller
-│   │   ├── auth_controller
-│   │   ├── cart_controller
-│   │   ├── dashboard_controller
-│   │   ├── location_controller
-│   │   ├── order_controller
-│   │   ├── order_details_controller
-│   │   ├── service_controller
-│   │   └── subcategory_controller
+│   ├── core
+│   ├── features
 │   ├── firebase_options.dart
 │   ├── main.dart
 │   ├── model
-│   │   ├── OneNote Table Of Contents.onetoc2
 │   │   ├── address_model
 │   │   ├── auth_model
 │   │   ├── cart_model
-│   │   ├── dashboard_model
 │   │   ├── location_model
 │   │   ├── order_model
 │   │   ├── parking
@@ -123,6 +114,7 @@
 │   │   ├── service
 │   │   ├── splash_screen
 │   │   └── sucessful
+│   ├── shared
 │   └── utils
 │       ├── api_endpoint_strings
 │       ├── api_strings
@@ -223,4 +215,4 @@
         ├── win32_window.cpp
         └── win32_window.h
 
-102 directories, 122 files
+96 directories, 120 files

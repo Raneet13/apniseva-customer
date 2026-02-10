@@ -1,5 +1,5 @@
 //address_form_screen.dart
-import 'package:apniseva/controller/address_controller/address_controller.dart';
+import 'package:apniseva/screens/address/controller/address_controller.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../controller/location_controller/location_controller.dart';
+import '../../location/lcontroller/location_controller.dart';
 import '../../../model/cart_model/cart_detail_model/cart_details_model.dart';
 import '../../../utils/api_strings/api_strings.dart';
 import '../widget/address_strings.dart';

@@ -1,12 +1,12 @@
-// location_screen.dart
+//lib/screens/location/screen/location_screen.dart
 import 'package:apniseva/utils/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../controller/auth_controller/auth_controller.dart';
-import '../../../controller/dashboard_controller/dash_controller.dart';
-import '../../../controller/location_controller/location_controller.dart';
+import '../../auth/controller/auth_controller.dart';
+import '../../../features/dashboard/controller/dash_controller.dart';
+import '../lcontroller/location_controller.dart';
 import '../../../utils/api_strings/api_strings.dart';
 import '../../../utils/buttons.dart';
 

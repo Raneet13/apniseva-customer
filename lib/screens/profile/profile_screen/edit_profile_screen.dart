@@ -1,4 +1,4 @@
-import 'package:apniseva/controller/auth_controller/auth_controller.dart';
+import 'package:apniseva/screens/auth/controller/auth_controller.dart';
 import 'package:apniseva/utils/buttons.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:apniseva/utils/input_field.dart';

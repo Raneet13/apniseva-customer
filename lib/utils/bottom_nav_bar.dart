@@ -1,6 +1,7 @@
+//lib/utils/bottom_nav_bar.dart
 import 'dart:io';
 
-import 'package:apniseva/screens/dashboard/screens/dashboard_screen.dart';
+import 'package:apniseva/features/dashboard/screens/dashboard_screen.dart';
 import 'package:apniseva/screens/more/screens/more_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,7 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:badges/badges.dart' as badges;
 import 'package:badges/badges.dart' as badges;
-import '../controller/cart_controller/cart_controller.dart';
+import '../screens/cart/cart_controller/cart_controller.dart';
 import '../main.dart';
 import '../screens/cart/screen/cart_screen.dart';
 import '../screens/notification/localNotification.dart';

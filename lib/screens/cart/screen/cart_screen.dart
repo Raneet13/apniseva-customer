@@ -1,5 +1,5 @@
 // cart_screen.dart
-import 'package:apniseva/controller/cart_controller/cart_controller.dart';
+import 'package:apniseva/screens/cart/cart_controller/cart_controller.dart';
 import 'package:apniseva/model/cart_model/cart_detail_model/cart_details_model.dart';
 import 'package:apniseva/screens/auth/screens/registration_screen.dart';
 import 'package:apniseva/screens/cart/cart_sections/cart_order_schedule.dart';

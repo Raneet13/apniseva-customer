@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:remixicon/remixicon.dart';
 import 'package:badges/badges.dart' as badges;
 
-import '../../../controller/cart_controller/cart_controller.dart';
+import '../../cart/cart_controller/cart_controller.dart';
 import '../../../utils/color.dart';
 
 class ServiceAppBar extends StatefulWidget implements PreferredSizeWidget {

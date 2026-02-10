@@ -1,6 +1,5 @@
-
-import 'package:apniseva/controller/cart_controller/cart_controller.dart';
-import 'package:apniseva/controller/service_controller/service_controller.dart';
+import 'package:apniseva/screens/cart/cart_controller/cart_controller.dart';
+import 'package:apniseva/screens/service/service_controller/service_controller.dart';
 import 'package:apniseva/model/service_model/service_model.dart';
 import 'package:apniseva/screens/auth/screens/registration_screen.dart';
 import 'package:apniseva/screens/service/sections/service_appbar.dart';
