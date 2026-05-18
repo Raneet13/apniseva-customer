@@ -1,5 +1,5 @@
 class ApiEndPoint {
-  static String baseUrl = 'http://apniseva.com/APITEST';
+  static String baseUrl = 'https://apniseva.com/APITEST';
   // static String baseUrl = 'https://collegeprojectz.com/apniseva/APITEST';
   static String loginOtp = '$baseUrl/LoginOTP';
   static String verifyOtp = '$baseUrl/VerifyOTP';
