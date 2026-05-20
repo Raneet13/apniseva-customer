@@ -125,7 +125,7 @@ class _GetLocationState extends State<GetLocation>
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Remix.map_pin_line,
                           color: Colors.white,
                           size: 28,
@@ -168,7 +168,7 @@ class _GetLocationState extends State<GetLocation>
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            child: Icon(
+                            child: const Icon(
                               Remix.close_line,
                               color: Colors.white,
                               size: 20,
@@ -185,7 +185,7 @@ class _GetLocationState extends State<GetLocation>
                   padding: const EdgeInsets.all(24),
                   child: Obx(() {
                     if (locController.isLoading.value == true) {
-                      return Container(
+                      return SizedBox(
                         height: 150,
                         child: Center(
                           child: Column(
@@ -208,6 +208,8 @@ class _GetLocationState extends State<GetLocation>
                         ),
                       );
                     }
+
+                    final cities = locController.locationModel.value.messages?.status?.city ?? [];
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,18 +258,16 @@ class _GetLocationState extends State<GetLocation>
                                 fontWeight: FontWeight.w500,
                                 color: const Color(0xFF1F2937),
                               ),
-                              items: locController
-                                  .locationModel.value.messages?.status!.city!
-                                  .map((items) {
+                              items: cities.map((items) {
                                 return DropdownMenuItem<String>(
-                                  onTap: () async {
-                                    SharedPreferences preferences =
-                                        await SharedPreferences.getInstance();
-                                    preferences.setString(ApiStrings.cityID,
-                                        items.cityId.toString());
-                                    preferences.setString(ApiStrings.cityName,
-                                        items.cityName.toString());
-                                  },
+                                  // onTap: () async {
+                                  //   SharedPreferences preferences =
+                                  //       await SharedPreferences.getInstance();
+                                  //   preferences.setString(ApiStrings.cityID,
+                                  //       items.cityId.toString());
+                                  //   preferences.setString(ApiStrings.cityName,
+                                  //       items.cityName.toString());
+                                  // },
                                   value: items.cityName,
                                   child: Row(
                                     children: [
@@ -278,7 +278,7 @@ class _GetLocationState extends State<GetLocation>
                                       ),
                                       const SizedBox(width: 12),
                                       Text(
-                                        items.cityName!,
+                                        items.cityName ?? "",
                                         style: GoogleFonts.inter(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w500,
@@ -291,8 +291,27 @@ class _GetLocationState extends State<GetLocation>
                               }).toList(),
                               onChanged: (String? newValue) async {
                                 setState(() {
-                                  getLocation = newValue!;
+                                  getLocation = newValue;
                                 });
+
+                                final selectedCity = cities.firstWhere(
+                                      (e) => e.cityName == newValue,
+                                );
+
+                                SharedPreferences preferences =
+                                await SharedPreferences.getInstance();
+
+                                await preferences.setString(
+                                  ApiStrings.cityID,
+                                  selectedCity.cityId.toString(),
+                                );
+
+                                await preferences.setString(
+                                  ApiStrings.cityName,
+                                  selectedCity.cityName.toString(),
+                                );
+
+                                debugPrint("Selected City: ${selectedCity.cityName}");
                               },
                             ),
                           ),
@@ -300,39 +319,39 @@ class _GetLocationState extends State<GetLocation>
                         const SizedBox(height: 24),
 
                         // Info Card
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: primaryColor.withOpacity(0.1),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Remix.information_line,
-                                color: primaryColor,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Your location helps us provide better services',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: primaryColor.withOpacity(0.9),
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+                        // Container(
+                        //   padding: const EdgeInsets.all(16),
+                        //   decoration: BoxDecoration(
+                        //     color: primaryColor.withOpacity(0.05),
+                        //     borderRadius: BorderRadius.circular(12),
+                        //     border: Border.all(
+                        //       color: primaryColor.withOpacity(0.1),
+                        //       width: 1,
+                        //     ),
+                        //   ),
+                        //   child: Row(
+                        //     children: [
+                        //       Icon(
+                        //         Remix.information_line,
+                        //         color: primaryColor,
+                        //         size: 20,
+                        //       ),
+                        //       const SizedBox(width: 12),
+                        //       Expanded(
+                        //         child: Text(
+                        //           'Your location helps us provide better services',
+                        //           style: GoogleFonts.inter(
+                        //             fontSize: 13,
+                        //             fontWeight: FontWeight.w500,
+                        //             color: primaryColor.withOpacity(0.9),
+                        //             height: 1.4,
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
+                        // const SizedBox(height: 24),
 
                         // Action Buttons
                         Row(
@@ -407,7 +426,7 @@ class _GetLocationState extends State<GetLocation>
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(
+                                        const Icon(
                                           Remix.check_line,
                                           color: Colors.white,
                                           size: 20,

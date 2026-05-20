@@ -64,8 +64,14 @@ class CartController extends GetxController {
       String? categoryID = preferences.getString(ApiStrings.catID);
       String? productQty = preferences.getString(ApiStrings.productQty);
 
+      if (userID == null) {
+        fetch.value = false;
+        Get.snackbar('Login Required', 'Please login to add items to cart');
+        return;
+      }
+
       String? addToCartAPI = ApiEndPoint.addToCart;
-      userId = userID!;
+      userId = userID;
       Map<String, String> body = {
         'user_id': userID,
         'service_id': serviceID!,
@@ -96,6 +102,7 @@ class CartController extends GetxController {
       return true;
     } catch (e) {
       debugPrint(e.toString());
+      fetch.value = false;
     }
   }
 
@@ -107,6 +114,12 @@ class CartController extends GetxController {
       SharedPreferences preferences = await SharedPreferences.getInstance();
       String? userID = preferences.getString(ApiStrings.userID);
       String? cityID = preferences.getString(ApiStrings.cityID);
+      
+      if (userID == null || cityID == null) {
+        fetch.value = false;
+        return;
+      }
+
       String? addressIDPref = preferences.getString(ApiStrings.addressID);
       dateController.text = DateFormat('dd-MM-yyyy')
           .format(DateTime.now()); //datetime when cart load
@@ -116,7 +129,7 @@ class CartController extends GetxController {
 
       String? cartAPI = ApiEndPoint.cartDetails;
 
-      Map<String, String> body = {'user_id': userID!, 'city_id': cityID!};
+      Map<String, String> body = {'user_id': userID, 'city_id': cityID};
 
       Map<String, String> headers = {
         "Content-Type": "application/json; charset=utf-8"
@@ -132,47 +145,53 @@ class CartController extends GetxController {
         cartDetailsDataModel.value = cartModel;
         // print(cartModel.toJson());
         //fetch address of previous
-        if (addressID != null) {
+        if (addressID != null && cartModel.messages?.status?.addressData != null) {
           int indexAddress = cartModel.messages!.status!.addressData!
               .indexWhere((map) => map.addressId == addressID);
-          AddressDatum addressData =
-              cartModel.messages!.status!.addressData![indexAddress];
-          //address
-          firstName = addressData.firstName;
-          lastName = addressData.lastName;
-          number = addressData.number;
-          email = addressData.email;
-          address1 = addressData.address1;
-          address2 = addressData.adress2;
-          state = addressData.state;
-          pinCode = addressData.pincode;
+          if (indexAddress != -1) {
+            AddressDatum addressData =
+                cartModel.messages!.status!.addressData![indexAddress];
+            //address
+            firstName = addressData.firstName;
+            lastName = addressData.lastName;
+            number = addressData.number;
+            email = addressData.email;
+            address1 = addressData.address1;
+            address2 = addressData.adress2;
+            state = addressData.state;
+            pinCode = addressData.pincode;
+          }
         }
         //address
         //Fetch Address of previous
         fetch.value = false;
       }
 
-      for (int i = 0;
-          i <= cartDetailsDataModel.value.messages!.status!.allCart!.length;
-          i++) {
-        var cartData = cartDetailsDataModel.value.messages!.status!.allCart![i];
+      if (cartDetailsDataModel.value.messages?.status?.allCart != null) {
+        for (int i = 0;
+            i < cartDetailsDataModel.value.messages!.status!.allCart!.length;
+            i++) {
+          var cartData = cartDetailsDataModel.value.messages!.status!.allCart![i];
 
-        productName!.add(cartData.servicename);
-        image!.add(cartData.image);
-        qty!.add(cartData.qty);
-        price!.add(cartData.price);
-        parentId!.add(cartData.parentIdId);
-        cartTtalAmount = cartTtalAmount + int.parse(cartData.price.toString());
+          productName!.add(cartData.servicename);
+          image!.add(cartData.image);
+          qty!.add(cartData.qty);
+          price!.add(cartData.price);
+          parentId!.add(cartData.parentIdId);
+          cartTtalAmount = cartTtalAmount + int.parse(cartData.price.toString());
+        }
       }
       fetch.value = false;
     } catch (e) {
       fetch.value = false;
-      debugPrint(e.toString());
+      debugPrint("Error in getCartData: $e");
       return false;
     }
   }
 
   cartTrueFalse(String serviceName) {
+    if (cartDetailsDataModel.value.messages?.status?.allCart == null) return false;
+
     fetch.value = true;
     final CartController cartController = Get.find<CartController>();
 
@@ -200,9 +219,15 @@ class CartController extends GetxController {
     RemoveItemDataModel removeItemModel = RemoveItemDataModel();
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? cartID = preferences.getString(ApiStrings.cartID);
+    
+    if (cartID == null) {
+      fetch.value = false;
+      return;
+    }
+
     String? removeItemAPI = ApiEndPoint.removeItems;
 
-    Map<String, String> body = {'cart_id': cartID!};
+    Map<String, String> body = {'cart_id': cartID};
 
     Map<String, String> headers = {
       "Content-Type": "application/json; charset=utf-8"
@@ -217,25 +242,30 @@ class CartController extends GetxController {
       removeItemDataModel.value == removeItemModel;
       fetch.value = false;
     } else {
-      Get.snackbar('Cart', 'Cart is empty');
+      Get.snackbar('Cart', 'Something went wrong');
     }
     fetch.value = false;
   }
 
   applyCoupon() async {
-    // try{
     fetch.value = true;
     SharedPreferences preferences = await SharedPreferences.getInstance();
     CouponDataModel couponModel = CouponDataModel();
 
     String? userID = preferences.getString(ApiStrings.userID);
     String? cityID = preferences.getString(ApiStrings.cityID);
+    
+    if (userID == null || cityID == null) {
+      fetch.value = false;
+      return;
+    }
+
     String? couponCode = couponTextController.text;
     String? couponAPI = ApiEndPoint.applyCoupon;
 
     Map<String, String> body = {
-      'user_id': userID!,
-      'city_id': cityID!,
+      'user_id': userID,
+      'city_id': cityID,
       'coupon_code': couponCode
     };
 
@@ -251,50 +281,20 @@ class CartController extends GetxController {
 
     if (response.statusCode == 200 && couponModel.status == 200) {
       couponDataModel.value = couponModel;
-      preferences.setString(ApiStrings.couponCharge,
-          couponDataModel.value.messages!.status!.couponDetails!.couponAmount!);
-      preferences.setString(ApiStrings.gstAmount,
-          couponDataModel.value.messages!.status!.gst!.gstAmount!);
+      if (couponDataModel.value.messages?.status?.couponDetails != null) {
+        preferences.setString(ApiStrings.couponCharge,
+            couponDataModel.value.messages!.status!.couponDetails!.couponAmount!);
+      }
+      if (couponDataModel.value.messages?.status?.gst != null) {
+        preferences.setString(ApiStrings.gstAmount,
+            couponDataModel.value.messages!.status!.gst!.gstAmount!);
+      }
       fetch.value = false;
     }
     fetch.value = false;
   }
 
   applyGst() async {
-    // try{
-    fetch.value = true;
-    // SharedPreferences preferences = await SharedPreferences.getInstance();
-    // CouponDataModel couponModel = CouponDataModel();
-
-    // String? userID = preferences.getString(ApiStrings.userID);
-    // String? cityID = preferences.getString(ApiStrings.cityID);
-    // String? couponCode = couponTextController.text;
-    // String? couponAPI = ApiEndPoint.applyCoupon;
-
-    // Map<String, String> body = {
-    //   'user_id': userID!,
-    //   'city_id': cityID!,
-    //   'coupon_code': couponCode
-    // };
-
-    // Map<String, String> header = {
-    //   "Content-Type": "application/json; charset=utf-8"
-    // };
-
-    // http.Response response = await http.post(Uri.parse(couponAPI),
-    //     body: jsonEncode(body), headers: header);
-
-    // debugPrint('CouponAPI: ${response.statusCode}');
-    // couponModel = couponDataModelFromJson(response.body);
-
-    // if (response.statusCode == 200 && couponModel.status == 200) {
-    //   couponDataModel.value = couponModel;
-    //   preferences.setString(ApiStrings.couponCharge,
-    //       couponDataModel.value.messages!.status!.couponDetails!.couponAmount!);
-    //   preferences.setString(ApiStrings.gstAmount,
-    //       couponDataModel.value.messages!.status!.gst!.gstAmount!);
-    //   fetch.value = false;
-    // }
     print(gstTextController.text);
     fetch.value = false;
   }
@@ -304,15 +304,18 @@ class CartController extends GetxController {
 
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? userID = preferences.getString(ApiStrings.userID);
-    String? couponAmount = preferences.getString(ApiStrings.couponCharge);
-    String? gstAmount = preferences.getString(ApiStrings.gstAmount);
+    String? couponAmount = preferences.getString(ApiStrings.couponCharge) ?? "0";
+    String? gstAmount = preferences.getString(ApiStrings.gstAmount) ?? "0";
     String? addressID = preferences.getString(ApiStrings.addressID);
+
+    if (userID == null) {
+      Get.snackbar('Error', 'Please login to checkout');
+      return;
+    }
+
     String? checkOutAPI = ApiEndPoint.checkout;
-    // print(
-    //     "payment:${paymentMode!}, date:${dateController.text},time:${timeController.text},price:${price.toString()},qty:${qty.toString()},image:${image.toString()},addressId:${addressID!},product name:${productName.toString()}");
-    // print("paymentMode:${paymentMode!}, paymentId:${payment_id ?? ""},");
     Map<String, dynamic> body = {
-      'user_id': userID!,
+      'user_id': userID,
       'paymentmode': paymentMode == "online" ? "2" : "1",
       'date': dateController.text,
       'time': timeController.text,
@@ -321,8 +324,8 @@ class CartController extends GetxController {
       'qty': qty.toString(),
       'image': image.toString(),
       'cupone_code': couponTextController.text,
-      'cupone_charge': couponAmount!,
-      'gst': gstAmount!,
+      'cupone_charge': couponAmount,
+      'gst': gstAmount,
       'address_id': addressID,
       'parent_id': parentId.toString(),
       'gstno': gstTextController.text,
@@ -364,53 +367,62 @@ class CartController extends GetxController {
     String date = redateController.text.toString();
     String time = retimeController.text.toString();
     DateTime newDate = DateTime.now();
-    // print(DateFormat('yyyy-MM-dd').parse(date));
     var ttt = "$date $time";
-    // print(ttt);
-    // print(DateFormat("dd-MM-yyyy hh:mm a")
-    //     .parse(ttt)); // pick dateand time from time icker
 
-    // print(DateFormat('yyyy-MM-dd hh:mm a')
-    //   ..parse(
-    //       DateFormat('dd-MM-yyyy').parse("21-03-2024 12:12 PM").toString()));
-    print(newDate.isAfter(DateFormat("dd-MM-yyyy hh:mm a").parse(ttt)));
-    if (newDate.isBefore(DateFormat("dd-MM-yyyy hh:mm a").parse(ttt))) {
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-      String? orderID = preferences.getString(ApiStrings.orderID);
-      String? resheduleApi = ApiEndPoint.reshedule;
+    try {
+      if (newDate.isBefore(DateFormat("dd-MM-yyyy hh:mm a").parse(ttt))) {
+        SharedPreferences preferences = await SharedPreferences.getInstance();
+        String? orderID = preferences.getString(ApiStrings.orderID);
 
-      Map<String, dynamic> body = {
-        'orderid': orderID!,
-        'rdate': date,
-        'rtime': time,
-      };
+        if (orderID == null) {
+          fetch.value = false;
+          return;
+        }
 
-      Map<String, String> headers = {
-        "Content-Type": "application/json; charset=utf-8"
-      };
+        String? resheduleApi = ApiEndPoint.reshedule;
 
-      http.Response response = await http.post(Uri.parse(resheduleApi),
-          body: jsonEncode(body), headers: headers);
-      if (response.statusCode == 200) {
+        Map<String, dynamic> body = {
+          'orderid': orderID,
+          'rdate': date,
+          'rtime': time,
+        };
+
+        Map<String, String> headers = {
+          "Content-Type": "application/json; charset=utf-8"
+        };
+
+        http.Response response = await http.post(Uri.parse(resheduleApi),
+            body: jsonEncode(body), headers: headers);
+        if (response.statusCode == 200) {
+          fetch.value = false;
+          Get.snackbar('Shedule', 'Sucess');
+        }
         fetch.value = false;
-        Get.snackbar('Shedule', 'Sucess');
-        // Get.to(() => const SuccessfulScreen());
+      } else {
+        Get.snackbar('Shedule', 'We not provide service before currect time',
+            backgroundColor: Colors.red);
+        fetch.value = false;
       }
+    } catch (e) {
+      debugPrint("Error in Reshedule: $e");
       fetch.value = false;
-    } else {
-      Get.snackbar('Shedule', 'We not provide service before currect time',
-          backgroundColor: Colors.red);
     }
   }
 
   deletItemFrmCart() async {
     fetch.value = true;
-    // RemoveItemDataModel removeItemModel = RemoveItemDataModel();
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? cartID = preferences.getString(ApiStrings.cartID);
+
+    if (cartID == null) {
+      Get.snackbar('Cart', 'Cart is already empty');
+      fetch.value = false;
+      return;
+    }
+
     String? removeItemAPI = ApiEndPoint.removeItems;
     print(cartID);
-    Map<String, String> body = {'cart_id': cartID!};
+    Map<String, String> body = {'cart_id': cartID};
 
     Map<String, String> headers = {
       "Content-Type": "application/json; charset=utf-8"
@@ -420,10 +432,8 @@ class CartController extends GetxController {
         body: jsonEncode(body), headers: headers);
     getCartData();
     debugPrint('RemoveItem: ${response.statusCode}');
-    // // removeItemModel = removeItemDataModelFromJson(response.body);
 
     if (response.statusCode == 200) {
-      // removeItemDataModel.value == removeItemModel;
       Get.snackbar('Item Delete', 'Sucess');
       fetch.value = false;
     } else {

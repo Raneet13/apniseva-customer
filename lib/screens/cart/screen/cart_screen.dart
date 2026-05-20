@@ -1,5 +1,6 @@
 import 'package:apniseva/controller/cart_controller/cart_controller.dart';
 import 'package:apniseva/model/cart_model/cart_detail_model/cart_details_model.dart';
+import 'package:apniseva/screens/auth/screens/registration_screen.dart';
 import 'package:apniseva/screens/cart/cart_sections/cart_order_schedule.dart';
 import 'package:apniseva/screens/cart/cart_strings/cart_strings.dart';
 import 'package:apniseva/screens/sucessful/screen/sucessfull_screen.dart';
@@ -32,13 +33,11 @@ class _CartScreenState extends State<CartScreen> {
   var _razorpay = Razorpay();
   String error = '';
   final CartController cartController = Get.find<CartController>();
+  bool isGuest = false;
 
   @override
   void initState() {
-    Future.delayed(Duration.zero, () {
-      cartController.getCartData();
-      cartController.applyCoupon();
-    });
+    checkGuestStatus();
     _razorpay = Razorpay();
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
@@ -46,12 +45,27 @@ class _CartScreenState extends State<CartScreen> {
     super.initState();
   }
 
-  Future<void> refresh() async {
-    return Future.delayed(Duration.zero, () {
-      cartController
-        ..getCartData()
-        ..applyCoupon();
+  checkGuestStatus() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    setState(() {
+      isGuest = pref.getBool('isGuest') ?? false;
     });
+    if (!isGuest) {
+      Future.delayed(Duration.zero, () {
+        cartController.getCartData();
+        cartController.applyCoupon();
+      });
+    }
+  }
+
+  Future<void> refresh() async {
+    if (!isGuest) {
+      return Future.delayed(Duration.zero, () {
+        cartController
+          ..getCartData()
+          ..applyCoupon();
+      });
+    }
   }
 
   void openCheckout() async {
@@ -118,116 +132,170 @@ class _CartScreenState extends State<CartScreen> {
       return Scaffold(
         backgroundColor: Colors.grey.shade50,
         appBar: CartAppBar(title: CartStrings.title),
-        body: cartController.fetch.value == true
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: primaryColor,
-                  strokeWidth: 3,
-                ),
-              )
-            : cartData.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    onRefresh: refresh,
-                    color: primaryColor,
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Cart Items Header
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        body: isGuest
+            ? _buildGuestUI()
+            : cartController.fetch.value == true
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: primaryColor,
+                      strokeWidth: 3,
+                    ),
+                  )
+                : cartData.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: refresh,
+                        color: primaryColor,
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Cart Items Header
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Items in Cart",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.blueGrey.shade900,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: primaryColor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        "${cartData.length} Items",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: primaryColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Cart Items List
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: cartData.length,
+                                  itemBuilder: (context, index) {
+                                    return _buildCartItem(
+                                        context, cartData[index], index);
+                                  },
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // Sections Header
                                 Text(
-                                  "Items in Cart",
+                                  "Delivery & Booking",
                                   style: GoogleFonts.poppins(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.blueGrey.shade900,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: primaryColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    "${cartData.length} Items",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: primaryColor,
-                                    ),
+                                const SizedBox(height: 16),
+
+                                // Address & Schedule Section
+                                const CartOrderScheduleTotal(),
+
+                                const SizedBox(height: 16),
+
+                                // Offers & GST Section
+                                const CartApplyCoupon(),
+                                const ApplyGstbill(),
+
+                                const SizedBox(height: 24),
+
+                                // Payment Method Header
+                                Text(
+                                  "Payment Method",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.blueGrey.shade900,
                                   ),
                                 ),
+                                const SizedBox(height: 16),
+
+                                // Payment Methods
+                                _buildPaymentMethodSelector(),
+
+                                const SizedBox(height: 32),
                               ],
                             ),
-                            const SizedBox(height: 16),
-
-                            // Cart Items List
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: cartData.length,
-                              itemBuilder: (context, index) {
-                                return _buildCartItem(
-                                    context, cartData[index], index);
-                              },
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            // Sections Header
-                            Text(
-                              "Delivery & Booking",
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.blueGrey.shade900,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Address & Schedule Section
-                            const CartOrderScheduleTotal(),
-
-                            const SizedBox(height: 16),
-
-                            // Offers & GST Section
-                            const CartApplyCoupon(),
-                            const ApplyGstbill(),
-
-                            const SizedBox(height: 24),
-
-                            // Payment Method Header
-                            Text(
-                              "Payment Method",
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.blueGrey.shade900,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Payment Methods
-                            _buildPaymentMethodSelector(),
-
-                            const SizedBox(height: 32),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
         bottomNavigationBar:
-            cartData.isEmpty ? SizedBox() : _buildBottomAction(width),
+            (isGuest || cartData.isEmpty) ? const SizedBox() : _buildBottomAction(width),
       );
     });
+  }
+
+  Widget _buildGuestUI() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50.withOpacity(0.5),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Remix.shopping_cart_2_line,
+                  size: 80, color: primaryColor.withOpacity(0.3)),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Your cart is waiting',
+              style: GoogleFonts.poppins(
+                color: Colors.blueGrey.shade900,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Please login to see items in your cart\nand avail our services.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: Colors.blueGrey.shade400,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            PrimaryButton(
+              width: 220,
+              height: 54,
+              onPressed: () => Get.offAll(() => const RegistrationScreen()),
+              child: const Text(
+                'Login / Register',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildEmptyState() {
@@ -565,11 +633,15 @@ class _CartScreenState extends State<CartScreen> {
                   SharedPreferences preferences =
                       await SharedPreferences.getInstance();
                   String? address = preferences.getString(ApiStrings.addressID);
-                  if (address == null) {
-                    Get.snackbar('Address', 'Please Select address',
-                        colorText: Colors.white,
-                        backgroundColor: Colors.orange);
-                  } else if (cartController.dateController.text.isEmpty) {
+                  if (address == null || address.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please add your address git status first'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  }
+                  else if (cartController.dateController.text.isEmpty) {
                     Get.snackbar('Date', 'Select Date',
                         colorText: Colors.white,
                         backgroundColor: Colors.orange);

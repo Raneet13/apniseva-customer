@@ -69,7 +69,7 @@ class _DashAppBarState extends State<DashAppBar> {
                   child: Row(
                     children: [
                       Text(
-                        cityName ?? 'Khorda',
+                        cityName ?? 'Select Location',
                         style: TextStyle(color: Colors.white),
                       ),
                       const Icon(

@@ -16,16 +16,23 @@ class ServiceController extends GetxController {
       isLoading.value = true;
       ServiceDataModel serviceModel = ServiceDataModel();
       SharedPreferences preferences = await SharedPreferences.getInstance();
-      String? userID = preferences.getString(ApiStrings.userID);
-      String? cityID = preferences.getString(ApiStrings.cityID);
+      
+      // Use default values if null to support Guest mode
+      String userID = preferences.getString(ApiStrings.userID) ?? "0";
+      String cityID = preferences.getString(ApiStrings.cityID) ?? "0";
       String? categoryID = preferences.getString(ApiStrings.catID);
+
+      if (categoryID == null) {
+        isLoading.value = false;
+        return;
+      }
 
       String? serviceAPI = ApiEndPoint.service;
 
       Map<String, String> body = {
-        'user_id': userID!,
-        'city_id': cityID!,
-        'category_id': categoryID!
+        'user_id': userID,
+        'city_id': cityID,
+        'category_id': categoryID
       };
 
       Map<String, String> headers = {
@@ -34,16 +41,17 @@ class ServiceController extends GetxController {
 
       http.Response response = await http.post(Uri.parse(serviceAPI),
           body: jsonEncode(body), headers: headers);
-      serviceModel = serviceDataModelFromJson(response.body);
-
-      if (response.statusCode == 200 && serviceModel.status == 200) {
-        serviceDataModel.value = serviceModel;
-        isLoading.value = false;
+      
+      if (response.statusCode == 200) {
+        serviceModel = serviceDataModelFromJson(response.body);
+        if (serviceModel.status == 200) {
+          serviceDataModel.value = serviceModel;
+        }
       }
-    } catch (e) {
-      debugPrint(e.toString());
       isLoading.value = false;
-      debugPrint(e.toString());
+    } catch (e) {
+      debugPrint("Error in getService: $e");
+      isLoading.value = false;
     }
   }
 }

@@ -27,6 +27,7 @@ class _MoreScreenState extends State<MoreScreen>
   final moreController = Get.put(AuthController());
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  bool isGuest = false;
 
   @override
   void initState() {
@@ -41,9 +42,17 @@ class _MoreScreenState extends State<MoreScreen>
     );
     _animationController.forward();
 
-    Future.delayed(Duration.zero, () {
-      moreController.getUserData();
+    checkGuestStatus();
+  }
+
+  checkGuestStatus() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    setState(() {
+      isGuest = pref.getBool('isGuest') ?? false;
     });
+    if (!isGuest) {
+      moreController.getUserData();
+    }
   }
 
   @override
@@ -54,50 +63,210 @@ class _MoreScreenState extends State<MoreScreen>
 
   // Menu items with icons and navigation
   List<Map<String, dynamic>> get menuItems => [
-        {
-          'title': 'Profile',
-          'icon': Remix.user_line,
-          'onTap': () => Get.to(() => const ProfileScreen()),
-          'color': const Color(0xFF6366F1),
+    {
+      'title': 'Profile',
+      'icon': Remix.user_line,
+      'onTap': () =>
+          _protectedAction(() => Get.to(() => const ProfileScreen())),
+      'color': const Color(0xFF6366F1),
+    },
+    {
+      'title': 'Address',
+      'icon': Remix.map_pin_line,
+      'onTap': () =>
+          _protectedAction(() => Get.to(() => const AddressScreen())),
+      'color': const Color(0xFFEC4899),
+    },
+    {
+      'title': 'Orders',
+      'icon': Remix.shopping_bag_line,
+      'onTap': () =>
+          _protectedAction(() => Get.to(() => const BookingScreen())),
+      'color': const Color(0xFF8B5CF6),
+    },
+    {
+      'title': 'Contact Us',
+      'icon': Remix.customer_service_line,
+      'onTap': () =>
+        Get.to(() => const ContactUs()),
+      'color': const Color(0xFF10B981),
+    },
+    {
+      'title': 'Privacy Policy',
+      'icon': Remix.shield_check_line,
+      'onTap': () =>
+          Get.to(() => const PrivacyPolicy()),
+      'color': const Color(0xFF3B82F6),
+    },
+    {
+      'title': 'Request For Deletion',
+      'icon': Remix.delete_bin_line,
+      'onTap': () =>
+          _protectedAction(() => Get.to(() => const DataDeletion())),
+      'color': const Color(0xFFEF4444),
+    },
+  ];
+
+  void _protectedAction(VoidCallback action) {
+    if (isGuest) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Icon
+                Container(
+                  // width: 64,
+                  // height: 64,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Remix.lock_line,
+                    color: primaryColor,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Title
+                Text(
+                  'Login Required',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1F2937),
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Subtitle
+                Text(
+                  'Please login or create an account\nto access this feature',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                    height: 1.5,
+                  ),
+                ),
+                // const SizedBox(height: 28),
+
+                // // Login button
+                // SizedBox(
+                //   width: double.infinity,
+                //   child: GestureDetector(
+                //     onTap: () {
+                //       Navigator.pop(context);
+                //       Get.offAll(() => const RegistrationScreen());
+                //     },
+                //     child: Container(
+                //       padding: const EdgeInsets.symmetric(vertical: 16),
+                //       decoration: BoxDecoration(
+                //         gradient: LinearGradient(
+                //           colors: [
+                //             primaryColor,
+                //             primaryColor.withOpacity(0.85),
+                //           ],
+                //         ),
+                //         borderRadius: BorderRadius.circular(14),
+                //         boxShadow: [
+                //           BoxShadow(
+                //             color: primaryColor.withOpacity(0.3),
+                //             blurRadius: 12,
+                //             offset: const Offset(0, 4),
+                //           ),
+                //         ],
+                //       ),
+                //       child: Row(
+                //         mainAxisAlignment: MainAxisAlignment.center,
+                //         children: [
+                //           const Icon(
+                //             Remix.login_box_line,
+                //             color: Colors.white,
+                //             size: 20,
+                //           ),
+                //           const SizedBox(width: 8),
+                //           Text(
+                //             'Login / Register',
+                //             style: GoogleFonts.inter(
+                //               fontSize: 15,
+                //               fontWeight: FontWeight.w600,
+                //               color: Colors.white,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                // const SizedBox(height: 12),
+
+                // // Maybe later button
+                // SizedBox(
+                //   width: double.infinity,
+                //   child: GestureDetector(
+                //     onTap: () => Navigator.pop(context),
+                //     child: Container(
+                //       padding: const EdgeInsets.symmetric(vertical: 16),
+                //       decoration: BoxDecoration(
+                //         color: Colors.grey.shade100,
+                //         borderRadius: BorderRadius.circular(14),
+                //       ),
+                //       child: Center(
+                //         child: Text(
+                //           'Maybe Later',
+                //           style: GoogleFonts.inter(
+                //             fontSize: 15,
+                //             fontWeight: FontWeight.w600,
+                //             color: Colors.grey.shade600,
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                //
+                // const SizedBox(height: 16),
+              ],
+            ),
+          );
         },
-        {
-          'title': 'Address',
-          'icon': Remix.map_pin_line,
-          'onTap': () => Get.to(() => const AddressScreen()),
-          'color': const Color(0xFFEC4899),
-        },
-        {
-          'title': 'Orders',
-          'icon': Remix.shopping_bag_line,
-          'onTap': () => Get.to(() => const BookingScreen()),
-          'color': const Color(0xFF8B5CF6),
-        },
-        {
-          'title': 'Contact Us',
-          'icon': Remix.customer_service_line,
-          'onTap': () => Get.to(() => const ContactUs()),
-          'color': const Color(0xFF10B981),
-        },
-        {
-          'title': 'Privacy Policy',
-          'icon': Remix.shield_check_line,
-          'onTap': () => Get.to(() => const PrivacyPolicy()),
-          'color': const Color(0xFF3B82F6),
-        },
-        {
-          'title': 'Request For Deletion',
-          'icon': Remix.delete_bin_line,
-          'onTap': () => Get.to(() => const DataDeletion()),
-          'color': const Color(0xFFEF4444),
-        },
-      ];
+      );
+    } else {
+      action();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
+      value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
@@ -117,15 +286,15 @@ class _MoreScreenState extends State<MoreScreen>
               // Menu Items
               SliverPadding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) {
+                        (context, index) {
                       return FadeTransition(
                         opacity: _fadeAnimation,
                         child: SlideTransition(
                           position: Tween<Offset>(
-                            begin: Offset(0, 0.3),
+                            begin: const Offset(0, 0.3),
                             end: Offset.zero,
                           ).animate(CurvedAnimation(
                             parent: _animationController,
@@ -151,12 +320,14 @@ class _MoreScreenState extends State<MoreScreen>
                 ),
               ),
 
-              // Logout Button
+              // Logout/Login Button
               SliverToBoxAdapter(
                 child: Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: _buildLogoutButton(context, width),
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: isGuest
+                      ? _buildLoginButton(context, width)
+                      : _buildLogoutButton(context, width),
                 ),
               ),
 
@@ -208,16 +379,28 @@ class _MoreScreenState extends State<MoreScreen>
         ],
       ),
       child: Obx(() {
-        if (moreController.isLoading.value == true) {
-          return Container(
+        if (!isGuest && moreController.isLoading.value == true) {
+          return const SizedBox(
             height: 220,
-            child: const Center(
+            child: Center(
               child: CircularProgressIndicator(
                 color: Colors.white,
               ),
             ),
           );
         }
+
+        String name = isGuest
+            ? "Guest User"
+            : (moreController.userModel.value.messages?.status?.fullname ??
+            "User");
+        String email = isGuest
+            ? "N/A"
+            : (moreController.userModel.value.messages?.status?.email ?? 'N/A');
+        String phone = isGuest
+            ? "N/A"
+            : (moreController.userModel.value.messages?.status?.contact ??
+            'N/A');
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 82),
@@ -227,9 +410,6 @@ class _MoreScreenState extends State<MoreScreen>
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  // SizedBox(
-                  //   height: 150,
-                  // ),
                   Container(
                     width: 100,
                     height: 100,
@@ -267,34 +447,34 @@ class _MoreScreenState extends State<MoreScreen>
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                        border: Border.all(
+                  if (!isGuest)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Remix.check_line,
+                          size: 14,
                           color: Colors.white,
-                          width: 2,
                         ),
                       ),
-                      child: const Icon(
-                        Remix.check_line,
-                        size: 14,
-                        color: Colors.white,
-                      ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 16),
 
               // User Name
               Text(
-                moreController.userModel.value.messages?.status?.fullname ??
-                    "Guest User",
+                name,
                 style: GoogleFonts.inter(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -304,10 +484,10 @@ class _MoreScreenState extends State<MoreScreen>
               ),
               const SizedBox(height: 6),
 
-              // User ID with Icon
+              // Email with Icon
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -322,7 +502,7 @@ class _MoreScreenState extends State<MoreScreen>
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      "Email: ${moreController.userModel.value.messages?.status?.email ?? 'N/A'}",
+                      "Email: $email",
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -333,12 +513,12 @@ class _MoreScreenState extends State<MoreScreen>
                   ],
                 ),
               ),
-              SizedBox(
-                height: 8,
-              ),
+              const SizedBox(height: 8),
+
+              // Phone with Icon
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -353,7 +533,7 @@ class _MoreScreenState extends State<MoreScreen>
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      "Phone No: ${moreController.userModel.value.messages?.status?.contact ?? 'N/A'}",
+                      "Phone No: $phone",
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -372,13 +552,13 @@ class _MoreScreenState extends State<MoreScreen>
   }
 
   Widget _buildMenuItem(
-    BuildContext context,
-    String title,
-    IconData icon,
-    VoidCallback onTap,
-    Color color,
-    int index,
-  ) {
+      BuildContext context,
+      String title,
+      IconData icon,
+      VoidCallback onTap,
+      Color color,
+      int index,
+      ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -454,10 +634,10 @@ class _MoreScreenState extends State<MoreScreen>
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
-                const Color(0xFFEF4444),
-                const Color(0xFFDC2626),
+                Color(0xFFEF4444),
+                Color(0xFFDC2626),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
@@ -482,6 +662,57 @@ class _MoreScreenState extends State<MoreScreen>
                 const SizedBox(width: 12),
                 Text(
                   'Log Out',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginButton(BuildContext context, double width) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Get.offAll(() => const RegistrationScreen()),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                primaryColor,
+                primaryColor.withOpacity(0.8),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Remix.login_box_line,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Login / Register',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -603,7 +834,7 @@ class _MoreScreenState extends State<MoreScreen>
                         child: InkWell(
                           onTap: () async {
                             SharedPreferences pref =
-                                await SharedPreferences.getInstance();
+                            await SharedPreferences.getInstance();
                             pref.clear();
                             Get.deleteAll();
                             Get.offAll(() => const RegistrationScreen());
@@ -622,7 +853,7 @@ class _MoreScreenState extends State<MoreScreen>
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      const Color(0xFFEF4444).withOpacity(0.3),
+                                  const Color(0xFFEF4444).withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),

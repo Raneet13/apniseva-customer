@@ -1,7 +1,9 @@
 import 'package:apniseva/controller/auth_controller/auth_controller.dart';
 import 'package:apniseva/screens/notification/localNotification.dart';
 import 'package:apniseva/screens/splash_screen/widgets/spalsh_string.dart';
+import 'package:apniseva/utils/bottom_nav_bar.dart';
 import 'package:apniseva/utils/buttons.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,6 +45,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
+    double bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return WillPopScope(
       onWillPop: () async {
@@ -193,118 +196,152 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     builder: (context, value, child) {
                       return Transform.translate(
                         offset: Offset(0, 50 * (1 - value)),
-                        child: Opacity(opacity: value, child: child),
+                        child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
                       );
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 30),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF152E88).withOpacity(0.15),
-                            offset: const Offset(0, 10),
-                            blurRadius: 30,
-                            spreadRadius: -5,
-                          ),
-                        ],
-                      ),
-                      child: Form(
-                        key: _regdKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Mobile Number",
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 30),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF152E88).withOpacity(0.15),
+                                offset: const Offset(0, 10),
+                                blurRadius: 30,
+                                spreadRadius: -5,
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            // Container to ensure consistent look for input
-                            Container(
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                        color: Colors.grey.withOpacity(0.2)),
-                                    color: Colors.grey.withOpacity(0.05)),
-                                padding: const EdgeInsets.only(
-                                    left: 10, right: 5, top: 2, bottom: 2),
-                                child: PhoneNumberVerification(
-                                  controller: authController.mobileController,
-                                )),
-                            const SizedBox(height: 25),
-                            PrimaryButton(
-                              width: double.infinity,
-                              height: 54,
-                              borderRadius: 12, // Increased border radiuss
-                              onPressed: () async {
-                                if (authController
-                                    .mobileController.text.isEmpty) {
-                                  errorLabel = AuthString.noNumberProvided;
-                                  Get.snackbar('Login Error', errorLabel!,
-                                      backgroundColor: Colors.red[50],
-                                      colorText: Colors.red);
-                                } else if (authController.mobileController.text
-                                        .trim()
-                                        .length !=
-                                    10) {
-                                  errorLabel = AuthString.validation;
-                                  Get.snackbar('Login Error', errorLabel!,
-                                      backgroundColor: Colors.red[50],
-                                      colorText: Colors.red);
-                                } else if (_regdKey.currentState!.validate()) {
-                                  SharedPreferences preferences =
-                                      await SharedPreferences.getInstance();
-                                  preferences.setString(ApiStrings.mobile,
-                                      authController.mobileController.text);
+                            ],
+                          ),
+                          child: Form(
+                            key: _regdKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Mobile Number",
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                // Container to ensure consistent look for input
+                                Container(
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.grey.withOpacity(0.2)),
+                                        color: Colors.grey.withOpacity(0.05)),
+                                    padding: const EdgeInsets.only(
+                                        left: 10, right: 5, top: 2, bottom: 2),
+                                    child: PhoneNumberVerification(
+                                      controller: authController.mobileController,
+                                    )),
+                                const SizedBox(height: 25),
+                                PrimaryButton(
+                                  width: double.infinity,
+                                  height: 54,
+                                  borderRadius: 12, // Increased border radiuss
+                                  onPressed: () async {
+                                    if (authController
+                                        .mobileController.text.isEmpty) {
+                                      errorLabel = AuthString.noNumberProvided;
+                                      Get.snackbar('Login Error', errorLabel!,
+                                          backgroundColor: Colors.red[50],
+                                          colorText: Colors.red);
+                                    } else if (authController.mobileController.text
+                                            .trim()
+                                            .length !=
+                                        10) {
+                                      errorLabel = AuthString.validation;
+                                      Get.snackbar('Login Error', errorLabel!,
+                                          backgroundColor: Colors.red[50],
+                                          colorText: Colors.red);
+                                    } else if (_regdKey.currentState!.validate()) {
+                                      SharedPreferences preferences =
+                                          await SharedPreferences.getInstance();
+                                      preferences.setBool('isGuest', false);
+                                      preferences.setString(ApiStrings.mobile,
+                                          authController.mobileController.text);
 
-                                  Future.delayed(Duration.zero, () {
-                                    authController.loginWithOTP();
-                                  });
-                                } else {
-                                  Get.snackbar('Login Error', errorLabel!,
-                                      backgroundColor: Colors.red[50],
-                                      colorText: Colors.red);
-                                }
-                              },
-                              child: Obx(() {
-                                return authController.isLoading.value == true
-                                    ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : Text(
-                                        AuthString.getOTP.toUpperCase(),
-                                        style: const TextStyle(
-                                          fontFamily: 'Poppins',
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          letterSpacing: 1.2,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      );
-                              }),
+                                      Future.delayed(Duration.zero, () {
+                                        authController.loginWithOTP();
+                                      });
+                                    } else {
+                                      Get.snackbar('Login Error', errorLabel!,
+                                          backgroundColor: Colors.red[50],
+                                          colorText: Colors.red);
+                                    }
+                                  },
+                                  child: Obx(() {
+                                    return authController.isLoading.value == true
+                                        ? const SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Text(
+                                            AuthString.getOTP.toUpperCase(),
+                                            style: const TextStyle(
+                                              fontFamily: 'Poppins',
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              letterSpacing: 1.2,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          );
+                                  }),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 25),
+                        // Want to explore first? Skip button
+                        RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                            children: [
+                              const TextSpan(text: "Want to explore first ? "),
+                              TextSpan(
+                                text: "Skip",
+                                style: TextStyle(
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () async {
+                                    SharedPreferences preferences =
+                                        await SharedPreferences.getInstance();
+                                    preferences.setBool('isGuest', true);
+                                    Get.offAll(() => const BottomNavBar());
+                                  },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
 
                 // Footer
                 Positioned(
-                  bottom: 30,
+                  bottom: bottomPadding + 35, // Increased bottom margin to avoid nav bar
                   left: 0,
                   right: 0,
                   child: Center(
@@ -314,7 +351,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 12,
-                        color: Colors.grey[400],
+                        color: Colors.grey[500],
                         height: 1.5,
                       ),
                     ),

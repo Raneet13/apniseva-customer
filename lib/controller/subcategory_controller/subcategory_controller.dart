@@ -7,48 +7,54 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SubCategoryController extends GetxController{
+class SubCategoryController extends GetxController {
   RxBool isLoading = false.obs;
   Rx<SubCategoryDataModel> subCategoryDataModel = SubCategoryDataModel().obs;
 
-  getSubCat() async{
-    try{
+  getSubCat() async {
+    try {
       isLoading.value = true;
       SubCategoryDataModel subCatModel = SubCategoryDataModel();
       SharedPreferences preferences = await SharedPreferences.getInstance();
+      
       String? catID = preferences.getString(ApiStrings.catID);
-      String? userID = preferences.getString(ApiStrings.userID);
+      String userID = preferences.getString(ApiStrings.userID) ?? "0";
       String? cityID = preferences.getString(ApiStrings.cityID);
+
+      if (catID == null || cityID == null) {
+        isLoading.value = false;
+        return false;
+      }
 
       String? subCatAPI = ApiEndPoint.subCat;
 
       Map<String, String> body = {
-        'user_id': userID!,
-        'cat_id': catID!,
-        'city_id': cityID!
+        'user_id': userID,
+        'cat_id': catID,
+        'city_id': cityID
       };
       Map<String, String> header = {
         "Content-Type": "application/json; charset=utf-8"
       };
 
       http.Response response = await http.post(
-        Uri.parse(subCatAPI),
-        body: jsonEncode(body),
-        headers: header
+          Uri.parse(subCatAPI),
+          body: jsonEncode(body),
+          headers: header
       );
-      // debugPrint(response.body);
-      subCatModel = subCategoryDataModelFromJson(response.body);
-
-      if(response.statusCode == 200 && subCatModel.status == 200){
-        subCategoryDataModel.value = subCatModel;
-        isLoading.value = false;
+      
+      if (response.statusCode == 200) {
+        subCatModel = subCategoryDataModelFromJson(response.body);
+        if (subCatModel.status == 200) {
+          subCategoryDataModel.value = subCatModel;
+        }
       }
-
+      isLoading.value = false;
       return true;
-    }catch(e) {
+    } catch (e) {
       isLoading.value = false;
       Get.snackbar('SubCategory', 'Something Went Wrong');
+      return false;
     }
   }
-
 }

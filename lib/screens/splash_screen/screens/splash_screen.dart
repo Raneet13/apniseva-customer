@@ -26,14 +26,12 @@ class _SplashScreenState extends State<SplashScreen> {
   checkLogin() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String? userID = pref.getString(ApiStrings.userID);
-    if (userID == null) {
-      // Navigator.push(context,
-      // MaterialPageRoute(builder: (context) => RegistrationScreen()));
-      Get.offAll(() => const RegistrationScreen());
-    } else {
-      // Navigator.push(
-      // context, MaterialPageRoute(builder: (context) => BottomNavBar()));
+    bool isGuest = pref.getBool('isGuest') ?? false;
+
+    if (userID != null || isGuest) {
       Get.offAll(() => const BottomNavBar());
+    } else {
+      Get.offAll(() => const RegistrationScreen());
     }
   }
 

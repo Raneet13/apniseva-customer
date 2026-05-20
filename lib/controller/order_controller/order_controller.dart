@@ -24,13 +24,26 @@ class OrderController extends GetxController{
       OrderDataModel orderModel = OrderDataModel();
       SharedPreferences pref = await SharedPreferences.getInstance();
       String? userID = pref.getString(ApiStrings.userID);
+      
+      if (userID == null) {
+        fetchOrder.value = false;
+        // Provide empty model to avoid null errors in UI
+        orderDataModel.value = OrderDataModel(
+          status: 200,
+          messages: Messages(
+            status: Status(orderdtls: [])
+          )
+        );
+        return false;
+      }
+
       String? orderAPI = ApiEndPoint.getOrder;
 
       debugPrint(userID);
       debugPrint(orderAPI);
 
       Map<String, String> body = {
-        "user_id": userID!
+        "user_id": userID
       };
 
       Map<String, String> header = {
@@ -42,22 +55,19 @@ class OrderController extends GetxController{
         body: jsonEncode(body),
         headers: header
       );
-      debugPrint('OrderAPI Status Code: ${response.body}');
+      debugPrint('OrderAPI Status Code: ${response.statusCode}');
       orderModel = orderDataModelFromJson(response.body);
 
       if(response.statusCode == 200 && orderModel.status == 200) {
-        fetchOrder.value = false;
         orderDataModel.value = orderModel;
       }
+      fetchOrder.value = false;
 
       return true;
     }catch(error) {
+      fetchOrder.value = false;
       isLoading.value = false;
-      debugPrint(error.toString());
-      Get.snackbar("Orders", error.toString(),
-          colorText: Colors.black,
-          backgroundColor: Colors.white54
-      );
+      debugPrint("Error in getOrders: $error");
       return false;
     }
   }
@@ -67,11 +77,17 @@ class OrderController extends GetxController{
       isLoading.value = true;
       SharedPreferences preferences = await SharedPreferences.getInstance();
       String? userID = preferences.getString(ApiStrings.userID);
+      
+      if (userID == null || orderID == null || statusId == null) {
+        isLoading.value = false;
+        return;
+      }
+
       String? acceptRejectOrderAPI = ApiEndPoint.acceptRejectOrder;
 
       Map<String, dynamic> body = {
-        "user_id": userID!,
-        'order_id': orderID!,
+        "user_id": userID,
+        'order_id': orderID,
         'status_id': statusId!
       };
 
@@ -91,17 +107,20 @@ class OrderController extends GetxController{
         debugPrint(response.body.toString());
       }
     }catch(e){
+      isLoading.value = false;
       debugPrint(e.toString());
     }
   }
 
   generatePDF(String? orderID) async{
     try{
+      if (orderID == null) return;
+      
       fetchPDF.value = true;
       String? pdfAPI = ApiEndPoint.generatePDF;
 
       Map<String, String> body = {
-        'order_id': orderID!,
+        'order_id': orderID,
       };
 
       Map<String, String> headers = {
@@ -120,6 +139,7 @@ class OrderController extends GetxController{
         debugPrint(response.body.toString());
       }
     } catch(e){
+      fetchPDF.value = false;
       debugPrint(e.toString());
     }
   }

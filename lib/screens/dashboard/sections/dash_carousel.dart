@@ -25,31 +25,18 @@ class _DashCarouselState extends State<DashCarousel> {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
+    List<OfferDtl> data = widget.getData ?? [];
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
-      child: widget.getData!.isEmpty
+      child: data.isEmpty
           ? Container(
               width: width - 32,
               height: 120,
               margin: const EdgeInsets.symmetric(horizontal: 16),
               alignment: Alignment.center,
               padding: const EdgeInsets.all(20.0),
-              decoration: BoxDecoration(
-                  // gradient: LinearGradient(
-                  //   begin: Alignment.topLeft,
-                  //   end: Alignment.bottomRight,
-                  //   colors: [
-                  //     Colors.grey.shade50,
-                  //     Colors.grey.shade100,
-                  //   ],
-                  // ),
-                  // borderRadius: BorderRadius.circular(20),
-                  // border: Border.all(
-                  //   color: Colors.grey.shade200,
-                  //   width: 1,
-                  // ),
-                  ),
+              decoration: const BoxDecoration(),
               child: Text(
                 DashCarouselStrings.noData,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -62,7 +49,7 @@ class _DashCarouselState extends State<DashCarousel> {
                 // Carousel Slider
                 CarouselSlider.builder(
                   carouselController: _carouselController,
-                  itemCount: widget.getData!.length,
+                  itemCount: data.length,
                   options: CarouselOptions(
                     height: 180,
                     viewportFraction: 0.97,
@@ -81,8 +68,8 @@ class _DashCarouselState extends State<DashCarousel> {
                     },
                   ),
                   itemBuilder: (context, int index, int pageIndexView) {
-                    List<OfferDtl>? data = widget.getData;
                     bool isActive = index == _currentIndex;
+                    final item = data[index];
 
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
@@ -108,7 +95,7 @@ class _DashCarouselState extends State<DashCarousel> {
                           children: [
                             // Background Image
                             Image.network(
-                              '${ApiEndPoint.imageAPI}/${data![index].img}',
+                              '${ApiEndPoint.imageAPI}/${item.img ?? ""}',
                               fit: BoxFit.fill,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
@@ -175,7 +162,7 @@ class _DashCarouselState extends State<DashCarousel> {
                                   ],
                                 ),
                                 child: Text(
-                                  data[index].code ?? '',
+                                  item.code ?? '',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
@@ -197,7 +184,7 @@ class _DashCarouselState extends State<DashCarousel> {
                 // Custom Indicator Dots
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: widget.getData!.asMap().entries.map((entry) {
+                  children: data.asMap().entries.map((entry) {
                     int index = entry.key;
                     bool isActive = index == _currentIndex;
 

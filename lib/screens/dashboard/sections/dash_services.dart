@@ -24,11 +24,12 @@ class _DashCategoryState extends State<DashCategory> {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
-    // double height = MediaQuery.of(context).size.height-(MediaQuery.of(context).padding.top + MediaQuery.of(context).padding.bottom);
+
+    List<CategoryDtl> data = widget.getData ?? [];
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: widget.getData!.isEmpty
+      child: data.isEmpty
           ? Container(
               width: width,
               height: 150,
@@ -61,7 +62,7 @@ class _DashCategoryState extends State<DashCategory> {
             )
           : GridView.builder(
               shrinkWrap: true,
-              itemCount: widget.getData!.length,
+              itemCount: data.length,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
@@ -70,7 +71,7 @@ class _DashCategoryState extends State<DashCategory> {
                 mainAxisSpacing: 16,
               ),
               itemBuilder: (BuildContext context, int index) {
-                List<CategoryDtl> data = widget.getData!;
+                final item = data[index];
                 return Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -78,8 +79,8 @@ class _DashCategoryState extends State<DashCategory> {
                       SharedPreferences preferences =
                           await SharedPreferences.getInstance();
                       preferences.setString(
-                          ApiStrings.catID, data[index].catId!);
-                      debugPrint("Category: ${data[index].catId}");
+                          ApiStrings.catID, item.catId ?? "");
+                      debugPrint("Category: ${item.catId}");
                       isModalOpen = true;
                       showBottomSheet(
                         context: context,
@@ -141,7 +142,7 @@ class _DashCategoryState extends State<DashCategory> {
                                   child: Container(
                                     padding: const EdgeInsets.all(18),
                                     child: Image.network(
-                                      '${ApiEndPoint.imageAPI}/${data[index].catImg!}',
+                                      '${ApiEndPoint.imageAPI}/${item.catImg ?? ""}',
                                       fit: BoxFit.contain,
                                       errorBuilder:
                                           (context, error, stackTrace) {
@@ -160,7 +161,7 @@ class _DashCategoryState extends State<DashCategory> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          data[index].catName!,
+                          item.catName ?? "",
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,

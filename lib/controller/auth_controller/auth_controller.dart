@@ -29,43 +29,55 @@ class AuthController extends GetxController {
     SharedPreferences pref = await SharedPreferences.getInstance();
     String? mobileNumber = pref.getString(ApiStrings.mobile);
     debugPrint(mobileNumber);
+    if (mobileNumber == null) return;
+    
     isLoading.value = true;
 
-    Map<String, String> body = {'contact': mobileNumber!};
+    Map<String, String> body = {'contact': mobileNumber};
     Map<String, String> header = {"Content-Type": "application/json"};
 
-    http.Response response = await http.post(
-      Uri.parse(ApiEndPoint.loginOtp),
-      headers: header,
-      body: jsonEncode(body),
-    );
-    Map data = jsonDecode(response.body);
-    debugPrint('OtpAPI Status Code: ${response.statusCode}');
-    debugPrint(response.body.toString());
+    try {
+      http.Response response = await http.post(
+        Uri.parse(ApiEndPoint.loginOtp),
+        headers: header,
+        body: jsonEncode(body),
+      );
+      Map data = jsonDecode(response.body);
+      debugPrint('OtpAPI Status Code: ${response.statusCode}');
+      debugPrint(response.body.toString());
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        isLoading.value = false;
+        pref.setString(ApiStrings.mobile,
+            data['messages']["status"]["contact_otp"].toString());
+
+        pref.setString(
+            ApiStrings.otp, data['messages']["status"]["login_otp"].toString());
+
+        String? otp = pref.getString(ApiStrings.otp);
+        debugPrint("OTP during api: ${otp.toString()}");
+        Get.to(() => OtpVerificationScreen(phoneNumber: mobileController.text));
+      } else {
+        isLoading.value = false;
+        Get.snackbar('OTP', 'Something went wrong.');
+      }
+    } catch (e) {
       isLoading.value = false;
-      pref.setString(ApiStrings.mobile,
-          data['messages']["status"]["contact_otp"].toString());
-
-      pref.setString(
-          ApiStrings.otp, data['messages']["status"]["login_otp"].toString());
-
-      String? otp = pref.getString(ApiStrings.otp);
-      debugPrint("OTP during api: ${otp.toString()}");
-      Get.to(() => OtpVerificationScreen(phoneNumber: mobileController.text));
-    } else {
-      isLoading.value = false;
-      Get.snackbar('OTP', 'Something went wrong.');
+      debugPrint("Error in loginWithOTP: $e");
     }
     otpController.clear();
   }
 
   getUserData() async {
     isLoading.value = true;
-    UserDataModel model = UserDataModel();
     SharedPreferences pref = await SharedPreferences.getInstance();
-    String mobile = pref.getString(ApiStrings.mobile)!;
+    String? mobile = pref.getString(ApiStrings.mobile);
+    
+    if (mobile == null) {
+      isLoading.value = false;
+      return;
+    }
+    
     String verifyOtp = ApiEndPoint.verifyOtp;
 
     Map<String, String> header = {
@@ -74,20 +86,26 @@ class AuthController extends GetxController {
     Map<String, String> body = {'contact': mobile};
     debugPrint('UserDataApi: $verifyOtp');
 
-    http.Response response = await http.post(Uri.parse(verifyOtp),
-        body: jsonEncode(body), headers: header);
-    // debugPrint("GetUserResponse: ${response.body}");
-    model = userDataModelFromJson(response.body);
+    try {
+      http.Response response = await http.post(Uri.parse(verifyOtp),
+          body: jsonEncode(body), headers: header);
+      
+      UserDataModel model = userDataModelFromJson(response.body);
 
-    if (response.statusCode == 200 && model.status == 200) {
-      userModel.value = model;
-      pref.setString(
-          ApiStrings.userID, userModel.value.messages!.status!.userId!);
-      String? userID = pref.getString(ApiStrings.userID);
-      debugPrint("User Id ${userModel.value.messages!.status!.userId!}");
-      isLoading.value = false;
-      return true;
+      if (response.statusCode == 200 && model.status == 200) {
+        userModel.value = model;
+        if (userModel.value.messages?.status?.userId != null) {
+          pref.setString(
+              ApiStrings.userID, userModel.value.messages!.status!.userId!);
+          debugPrint("User Id ${userModel.value.messages!.status!.userId!}");
+        }
+        isLoading.value = false;
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Error in getUserData: $e");
     }
+    isLoading.value = false;
   }
 
   clear() {
@@ -100,25 +118,31 @@ class AuthController extends GetxController {
     String email,
     String phoneNumber,
   ) async {
+    String? userId = userModel.value.messages?.status?.userId;
+    if (userId == null) return false;
+
     Map<String, String> header = {
       'Content-type': 'application/json',
     };
     Map<String, String> body = {
-      'user_id': '${userModel.value.messages!.status!.userId}',
+      'user_id': userId,
       'full_name': name,
       'e_mail': email,
       'contact_number': phoneNumber,
     };
 
-    http.Response response = await http.post(
-        Uri.parse('https://apniseva.com/API/update_profile'),
-        body: jsonEncode(body),
-        headers: header);
+    try {
+      http.Response response = await http.post(
+          Uri.parse('https://apniseva.com/API/update_profile'),
+          body: jsonEncode(body),
+          headers: header);
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      return false;
+      if (response.statusCode == 200) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Error in updateUserData: $e");
     }
+    return false;
   }
 }

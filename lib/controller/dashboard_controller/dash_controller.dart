@@ -13,43 +13,45 @@ class DashController extends GetxController {
   Rx<DashDataModel> dashDataModel = DashDataModel().obs;
 
   getDashboard() async {
-    // try{
     isLoading.value = true;
     DashDataModel dashModel = DashDataModel();
 
     SharedPreferences pref = await SharedPreferences.getInstance();
-    String? cityID = pref.getString(ApiStrings.cityID);
-    String? userID = pref.getString(ApiStrings.userID);
-    print(userID);
-    print(cityID);
-    String? dashApi = ApiEndPoint.getDash;
+    // Default to empty string or "0" if null to avoid "Null check operator used on a null value"
+    String cityID = pref.getString(ApiStrings.cityID) ?? "";
+    String userID = pref.getString(ApiStrings.userID) ?? "0";
 
-    Map<String, String> body = {"user_id": userID!, "city_id": cityID!};
+    debugPrint("UserID: $userID");
+    debugPrint("CityID: $cityID");
+
+    if (cityID.isEmpty) {
+      isLoading.value = false;
+      return false;
+    }
+
+    String dashApi = ApiEndPoint.getDash;
+
+    Map<String, String> body = {"user_id": userID, "city_id": cityID};
     Map<String, String> header = {
       "Content-Type": "application/json; charset=utf-8"
     };
 
-    http.Response response = await http.post(Uri.parse(dashApi),
-        body: jsonEncode(body), headers: header);
-    debugPrint('DashAPI Status Code: ${response.statusCode.toString()}');
-    dashModel = dashDataModelFromJson(response.body);
-    // debugPrint(response.body);
-
-    if (response.statusCode == 200 && dashModel.status == 200) {
-      dashDataModel.value = dashModel;
+    try {
+      http.Response response = await http.post(Uri.parse(dashApi),
+          body: jsonEncode(body), headers: header);
+      debugPrint('DashAPI Status Code: ${response.statusCode.toString()}');
+      
+      if (response.statusCode == 200) {
+        dashModel = dashDataModelFromJson(response.body);
+        if (dashModel.status == 200) {
+          dashDataModel.value = dashModel;
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching dashboard: $e");
     }
+    
     isLoading.value = false;
     return true;
-    // }
-
-    /*catch(error) {
-     isLoading.value = false;
-     Get.snackbar("Dashboard", "Something went wrong! please try again later",
-         colorText: Colors.black,
-         backgroundColor: Colors.white54
-     );
-     debugPrint(error.toString());
-     return false;
-   }*/
   }
 }

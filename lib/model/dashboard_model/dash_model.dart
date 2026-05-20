@@ -1,7 +1,3 @@
-// To parse this JSON data, do
-//
-//     final dashDataModel = dashDataModelFromJson(jsonString);
-
 import 'dart:convert';
 
 DashDataModel dashDataModelFromJson(String str) => DashDataModel.fromJson(json.decode(str));
@@ -22,7 +18,7 @@ class DashDataModel {
   factory DashDataModel.fromJson(Map<String, dynamic> json) => DashDataModel(
     status: json["status"],
     error: json["error"],
-    messages: Messages.fromJson(json["messages"]),
+    messages: json["messages"] == null ? null : Messages.fromJson(json["messages"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -68,19 +64,19 @@ class Status {
   List<CategoryDtl>? categoryDtl;
 
   factory Status.fromJson(Map<String, dynamic> json) => Status(
-    userDtl:  List<UserDtl>.from(json["user_dtl"].map((x) => UserDtl.fromJson(x))),
-    testimonialDtl: List<TestimonialDtl>.from(json["testimonial_dtl"].map((x) => TestimonialDtl.fromJson(x))),
-    searchDtl:List<SearchDtl>.from(json["search_dtl"].map((x) => SearchDtl.fromJson(x))),
-    offerDtl: List<OfferDtl>.from(json["offer_dtl"].map((x) => OfferDtl.fromJson(x))),
-    categoryDtl: List<CategoryDtl>.from(json["category_dtl"].map((x) => CategoryDtl.fromJson(x))),
+    userDtl: json["user_dtl"] == null ? [] : List<UserDtl>.from(json["user_dtl"].map((x) => UserDtl.fromJson(x))),
+    testimonialDtl: json["testimonial_dtl"] == null ? [] : List<TestimonialDtl>.from(json["testimonial_dtl"].map((x) => TestimonialDtl.fromJson(x))),
+    searchDtl: json["search_dtl"] == null ? [] : List<SearchDtl>.from(json["search_dtl"].map((x) => SearchDtl.fromJson(x))),
+    offerDtl: json["offer_dtl"] == null ? [] : List<OfferDtl>.from(json["offer_dtl"].map((x) => OfferDtl.fromJson(x))),
+    categoryDtl: json["category_dtl"] == null ? [] : List<CategoryDtl>.from(json["category_dtl"].map((x) => CategoryDtl.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
-    "user_dtl": List<dynamic>.from(userDtl!.map((x) => x.toJson())),
-    "testimonial_dtl": List<dynamic>.from(testimonialDtl!.map((x) => x.toJson())),
-    "search_dtl": List<dynamic>.from(searchDtl!.map((x) => x.toJson())),
-    "offer_dtl": List<dynamic>.from(offerDtl!.map((x) => x.toJson())),
-    "category_dtl": List<dynamic>.from(categoryDtl!.map((x) => x.toJson())),
+    "user_dtl": userDtl == null ? [] : List<dynamic>.from(userDtl!.map((x) => x.toJson())),
+    "testimonial_dtl": testimonialDtl == null ? [] : List<dynamic>.from(testimonialDtl!.map((x) => x.toJson())),
+    "search_dtl": searchDtl == null ? [] : List<dynamic>.from(searchDtl!.map((x) => x.toJson())),
+    "offer_dtl": offerDtl == null ? [] : List<dynamic>.from(offerDtl!.map((x) => x.toJson())),
+    "category_dtl": categoryDtl == null ? [] : List<dynamic>.from(categoryDtl!.map((x) => x.toJson())),
   };
 }
 
@@ -178,7 +174,7 @@ class OfferDtl {
     "city_id": cityId,
     "discount_type": discountType,
     "discount_value": discountValue,
-    "valid_uo_to": "${validUoTo!.year.toString().padLeft(4, '0')}-${validUoTo!.month.toString().padLeft(2, '0')}-${validUoTo!.day.toString().padLeft(2, '0')}",
+    "valid_uo_to": validUoTo == null ? null : "${validUoTo!.year.toString().padLeft(4, '0')}-${validUoTo!.month.toString().padLeft(2, '0')}-${validUoTo!.day.toString().padLeft(2, '0')}",
     "used_up_to": usedUpTo,
     "no_of_use_user": noOfUseUser,
     "price_cart": priceCart,

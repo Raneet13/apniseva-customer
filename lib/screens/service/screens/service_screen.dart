@@ -1,6 +1,7 @@
 import 'package:apniseva/controller/cart_controller/cart_controller.dart';
 import 'package:apniseva/controller/service_controller/service_controller.dart';
 import 'package:apniseva/model/service_model/service_model.dart';
+import 'package:apniseva/screens/auth/screens/registration_screen.dart';
 import 'package:apniseva/screens/service/sections/service_appbar.dart';
 import 'package:apniseva/screens/service/sections/service_strings.dart';
 import 'package:apniseva/utils/api_endpoint_strings/api_endpoint_strings.dart';
@@ -26,27 +27,41 @@ class ServiceScreen extends StatefulWidget {
 class _ServiceScreenState extends State<ServiceScreen> {
   final serviceController = Get.put(ServiceController());
   final addToCartController = Get.find<CartController>();
+  bool isGuest = false;
 
   @override
   void initState() {
+    checkGuestStatus();
     service();
     super.initState();
   }
 
+  checkGuestStatus() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    setState(() {
+      isGuest = pref.getBool('isGuest') ?? false;
+    });
+  }
+
   service() async {
     serviceController.getService();
-    await addToCartController.addToCart();
+    if (!isGuest) {
+      await addToCartController.addToCart();
+    }
   }
 
   refresh() async {
     Future.delayed(Duration.zero, () async {
       serviceController.getService();
-      await addToCartController.addToCart();
-      await addToCartController.getCartData();
+      if (!isGuest) {
+        await addToCartController.addToCart();
+        await addToCartController.getCartData();
+      }
     });
   }
 
   bool cartTrueFalse(String serviceName) {
+    if (isGuest) return false;
     final CartController cartController = Get.find<CartController>();
     bool cartTrue = false;
     if (cartController.cartDetailsDataModel.value.messages?.status?.allCart !=
@@ -63,6 +78,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
   }
 
   String itemQty(String productId) {
+    if (isGuest) return "0";
     final CartController cartController = Get.find<CartController>();
     String qty = "0";
     if (cartController.cartDetailsDataModel.value.messages?.status?.allCart !=
@@ -79,6 +95,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
   }
 
   Future<String?> checkCartId(String productId) async {
+    if (isGuest) return null;
     final CartController cartController = Get.find<CartController>();
     if (cartController.cartDetailsDataModel.value.messages?.status?.allCart !=
         null) {
@@ -122,9 +139,9 @@ class _ServiceScreenState extends State<ServiceScreen> {
               Text(
                 "Service Details",
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.blueGrey.shade900,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.blueGrey.shade900,
+                ),
               ),
               const SizedBox(height: 16),
               Flexible(
@@ -156,7 +173,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
   Widget build(BuildContext context) {
     final cartController = Get.find<CartController>();
     return Obx(
-      () {
+          () {
         if (serviceController.isLoading.value) {
           return Scaffold(
             body: Center(
@@ -169,24 +186,35 @@ class _ServiceScreenState extends State<ServiceScreen> {
         }
 
         final serviceData = serviceController
-                .serviceDataModel.value.messages?.status?.serviceList ??
+            .serviceDataModel.value.messages?.status?.serviceList ??
             [];
 
         return Scaffold(
           backgroundColor: Colors.grey.shade50,
           appBar: ServiceAppBar(title: ServiceStrings.serviceName),
-          bottomNavigationBar: _buildBottomCartBar(context, cartController),
+          // FIX 2: Use bottomNavigationBar with SafeArea so it never overlaps
+          // the device's gesture bar / home indicator.
+          bottomNavigationBar: isGuest
+              ? null
+              : _buildBottomCartBar(context, cartController),
           body: serviceData.isEmpty
               ? _buildEmptyState()
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: serviceData.length,
-                  itemBuilder: (context, index) {
-                    return _buildServiceCard(
-                        context, serviceData[index], cartController);
-                  },
-                ),
+            // Keep a comfortable bottom padding so last card isn't
+            // hidden behind the floating cart bar.
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              MediaQuery.of(context).padding.bottom + 16,
+            ),
+            physics: const BouncingScrollPhysics(),
+            itemCount: serviceData.length,
+            itemBuilder: (context, index) {
+              return _buildServiceCard(
+                  context, serviceData[index], cartController);
+            },
+          ),
         );
       },
     );
@@ -238,104 +266,108 @@ class _ServiceScreenState extends State<ServiceScreen> {
           borderRadius: BorderRadius.circular(28),
           child: Padding(
             padding: const EdgeInsets.all(12.0),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Premium Image Section
-                  Container(
-                    width: 115,
-                    height: 115,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
-                      child: Image.network(
-                        "${ApiEndPoint.imageAPI}/${item.serviceImage}",
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                              strokeWidth: 2,
-                              color: primaryColor.withOpacity(0.3),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) => Center(
-                          child: Opacity(
-                            opacity: 0.5,
-                            child: Image.asset(
-                              "assets/images/no_image.jpg",
-                              fit: BoxFit.cover,
-                            ),
+            child: Row(
+              // FIX 1: Removed IntrinsicHeight — it caused the Column inside
+              // to be tightly constrained, leading to the 1px overflow.
+              // crossAxisAlignment drives alignment without IntrinsicHeight.
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image Section — fixed square size, no longer drives row height
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Container(
+                    width: 110,
+                    height: 110,
+                    color: Colors.blue.shade50.withOpacity(0.4),
+                    child: Image.network(
+                      "${ApiEndPoint.imageAPI}/${item.serviceImage}",
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                                : null,
+                            strokeWidth: 2,
+                            color: primaryColor.withOpacity(0.3),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Opacity(
+                          opacity: 0.5,
+                          child: Image.asset(
+                            "assets/images/no_image.jpg",
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                ),
+                const SizedBox(width: 16),
 
-                  // Content Section
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.serviceName ?? "",
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.blueGrey.shade900,
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                // Content Section
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    // FIX 1: mainAxisSize.min so the Column only takes the
+                    // space its children actually need — no more overflow.
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.serviceName ?? "",
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.blueGrey.shade900,
+                          height: 1.2,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '₹${item.amount}',
-                          style: GoogleFonts.outfit(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: primaryColor,
-                          ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '₹${item.amount}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: primaryColor,
                         ),
-                        const SizedBox(height: 8),
-                        if (item.serviceDetails != null &&
-                            item.serviceDetails!.isNotEmpty)
-                          Html(
-                            data: item.serviceDetails!.length > 80
-                                ? "${item.serviceDetails!.substring(0, 75)}..."
-                                : item.serviceDetails!,
-                            style: {
-                              "body": Style(
-                                color: Colors.blueGrey.shade500,
-                                fontSize: FontSize(11.0),
-                                margin: Margins.zero,
-                                padding: HtmlPaddings.zero,
-                                maxLines: 2,
-                                textOverflow: TextOverflow.ellipsis,
-                              ),
-                            },
-                          ),
-                        const Spacer(),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child:
-                              _buildCartControls(context, item, isInCart, qty),
+                      ),
+                      const SizedBox(height: 4),
+                      if (item.serviceDetails != null &&
+                          item.serviceDetails!.isNotEmpty)
+                        Html(
+                          data: item.serviceDetails!.length > 80
+                              ? "${item.serviceDetails!.substring(0, 75)}..."
+                              : item.serviceDetails!,
+                          style: {
+                            "body": Style(
+                              color: Colors.blueGrey.shade500,
+                              fontSize: FontSize(11.0),
+                              margin: Margins.zero,
+                              padding: HtmlPaddings.zero,
+                              maxLines: 2,
+                              textOverflow: TextOverflow.ellipsis,
+                            ),
+                          },
                         ),
-                      ],
-                    ),
+                      // FIX 1: Replaced Spacer() with a small fixed gap.
+                      // Spacer() inside an unbounded (min) column causes
+                      // assertion errors; a fixed gap is safe and sufficient.
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child:
+                        _buildCartControls(context, item, isInCart, qty),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -364,6 +396,15 @@ class _ServiceScreenState extends State<ServiceScreen> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () async {
+              if (isGuest) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Please login first to add products"),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+                return;
+              }
               SharedPreferences prefs = await SharedPreferences.getInstance();
               prefs.setString(ApiStrings.serviceID, item.serviceId!);
               prefs.setString(ApiStrings.catID, item.catId!);
@@ -453,8 +494,8 @@ class _ServiceScreenState extends State<ServiceScreen> {
 
   Widget _buildIconButton(
       {required IconData icon,
-      required VoidCallback onPressed,
-      bool isPrimary = false}) {
+        required VoidCallback onPressed,
+        bool isPrimary = false}) {
     return Material(
       color: isPrimary ? primaryColor : Colors.white,
       borderRadius: BorderRadius.circular(12),
@@ -475,7 +516,7 @@ class _ServiceScreenState extends State<ServiceScreen> {
   Widget _buildBottomCartBar(
       BuildContext context, CartController cartController) {
     if (cartController.cartDetailsDataModel.value.messages?.status?.allCart ==
-            null ||
+        null ||
         cartController
             .cartDetailsDataModel.value.messages!.status!.allCart!.isEmpty) {
       return const SizedBox.shrink();
@@ -484,72 +525,78 @@ class _ServiceScreenState extends State<ServiceScreen> {
     final int count = cartController
         .cartDetailsDataModel.value.messages!.status!.allCart!.length;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryColor, primaryColor.withBlue(200)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => Get.to(() => const CartScreen()),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Remix.shopping_bag_3_line,
-                  color: Colors.white, size: 24),
+    // FIX 2: Wrap in SafeArea so the bar sits above the device's home
+    // indicator / gesture nav bar on all Android & iOS devices.
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, primaryColor.withBlue(200)],
             ),
-            const SizedBox(width: 16),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: InkWell(
+            onTap: () => Get.to(() => const CartScreen()),
+            child: Row(
               children: [
-                Text(
-                  "$count ${count == 1 ? 'Item' : 'Items'} Added",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
                   ),
+                  child: const Icon(Remix.shopping_bag_3_line,
+                      color: Colors.white, size: 24),
                 ),
-                Text(
-                  "View Cart Details",
+                const SizedBox(width: 16),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "$count ${count == 1 ? 'Item' : 'Items'} Added",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "View Cart Details",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                const Text(
+                  "GO TO CART",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    letterSpacing: 1.2,
                   ),
                 ),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_forward_ios_rounded,
+                    color: Colors.white, size: 14),
               ],
             ),
-            const Spacer(),
-            const Text(
-              "GO TO CART",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-                fontSize: 14,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                color: Colors.white, size: 14),
-          ],
+          ),
         ),
       ),
     );

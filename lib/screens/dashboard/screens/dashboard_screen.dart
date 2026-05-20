@@ -38,17 +38,19 @@ class _DashScreenState extends State<DashScreen> {
 
   checkUserLoc() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    String? otp = preferences.getString(ApiStrings.otp);
+    bool isGuest = preferences.getBool('isGuest') ?? false;
     String? cityID = preferences.getString(ApiStrings.cityID);
 
-    if (cityID!.isEmpty) {
-      Future.delayed(Duration.zero, () {
-        authController.getUserData();
-      });
+    if (cityID == null || cityID.isEmpty) {
+      if (!isGuest) {
+        Future.delayed(Duration.zero, () {
+          authController.getUserData();
+        });
+      }
 
-      preferences.getString(ApiStrings.cityID);
       showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) {
             return const GetLocation();
           });
@@ -96,15 +98,15 @@ class _DashScreenState extends State<DashScreen> {
                       ),
                       DashCategory(
                         getData: dashController
-                            .dashDataModel.value.messages!.status!.categoryDtl!,
+                            .dashDataModel.value.messages?.status?.categoryDtl ?? [],
                       ),
                       // SizedBox(height: height * 0.02),
-                      Divider(),
+                      const Divider(),
                       DashCarousel(
                         getData: dashController
-                            .dashDataModel.value.messages!.status!.offerDtl!,
+                            .dashDataModel.value.messages?.status?.offerDtl ?? [],
                       ),
-                      Divider(),
+                      const Divider(),
                       // SizedBox(height: height * 0.02),
                       // Align(
                       //     alignment: Alignment.centerLeft,
@@ -144,12 +146,12 @@ class _DashScreenState extends State<DashScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 "Odisha's Own",
                 style: TextStyle(
                   fontSize: 38,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFFD6D6D6),
+                  color: Color(0xFFD6D6D6),
                   height: 1.0,
                   letterSpacing: -1.5,
                   fontFamily:
@@ -158,12 +160,12 @@ class _DashScreenState extends State<DashScreen> {
               ),
               Row(
                 children: [
-                  Text(
+                  const Text(
                     "app",
                     style: TextStyle(
                       fontSize: 38,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFFD6D6D6),
+                      color: Color(0xFFD6D6D6),
                       height: 1.0,
                       letterSpacing: -1.5,
                       fontFamily: 'Inter',
@@ -198,12 +200,12 @@ class _DashScreenState extends State<DashScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
+              const Text(
                 "apniseva",
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFFE0E0E0),
+                  color: Color(0xFFE0E0E0),
                   letterSpacing: -1.0,
                   fontFamily: 'Inter',
                 ),

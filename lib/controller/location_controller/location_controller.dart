@@ -20,7 +20,7 @@ class LocationController extends GetxController {
       LocationModel locModel = LocationModel();
 
       SharedPreferences pref = await SharedPreferences.getInstance();
-      String? id = pref.getString(ApiStrings.userID);
+      String id = pref.getString(ApiStrings.userID) ?? "0";
       String url = "${ApiEndPoint.getLoc}=$id";
 
       Map<String, String> header = {
@@ -31,14 +31,16 @@ class LocationController extends GetxController {
           Uri.parse(url),
           headers: header
       );
-      locModel = locationModelFromJson(response.body);
-      var data = jsonDecode(response.body);
-
-      if(data["status"] == 200){
-        locationModel.value = locModel;
+      
+      debugPrint("LocationAPI Response Code: ${response.statusCode.toString()}");
+      
+      if(response.statusCode == 200){
+        locModel = locationModelFromJson(response.body);
+        if (locModel.status == 200) {
+          locationModel.value = locModel;
+        }
       }
 
-      debugPrint("LocationAPI Response Code: ${response.statusCode.toString()}");
       isLoading.value = false;
       return true;
     } catch(e) {
@@ -47,7 +49,7 @@ class LocationController extends GetxController {
           colorText: Colors.black,
           backgroundColor: Colors.white54
       );
-      debugPrint(e.toString());
+      debugPrint("Error in getLoc: $e");
       return false;
     }
   }

@@ -120,12 +120,11 @@ class _ChooseSubCategoryState extends State<ChooseSubCategory> {
                       onTap: () async {
                         SharedPreferences preferences =
                             await SharedPreferences.getInstance();
-                        preferences.setString(ApiStrings.catID, item.catId!);
+                        preferences.setString(ApiStrings.catID, item.catId ?? "");
 
                         if (item.subcat == 1) {
                           Get.to(() => const ServiceScreen());
                         } else {
-                          // Note: In a real app, you might want to push a new choice or refresh
                           subCategoryController.getSubCat();
                         }
                       },
@@ -166,7 +165,7 @@ class _ChooseSubCategoryState extends State<ChooseSubCategory> {
                                     child: Container(
                                       padding: const EdgeInsets.all(16),
                                       child: Image.network(
-                                        '${ApiEndPoint.imageAPI}/${item.catImg}',
+                                        '${ApiEndPoint.imageAPI}/${item.catImg ?? ""}',
                                         fit: BoxFit.contain,
                                         errorBuilder:
                                             (context, error, stackTrace) {
