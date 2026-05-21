@@ -18,7 +18,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final profileController = Get.put(AuthController());
+  final profileController = Get.find<AuthController>();
 
   @override
   void initState() {
@@ -76,29 +76,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                   ),
                 ),
-                // Positioned(
-                //   bottom: 0,
-                //   right: 0,
-                //   child: GestureDetector(
-                //     onTap: () {
-                //       // Handle image pick
-                //       // profileController.pickImage();
-                //     },
-                //     child: Container(
-                //       padding: const EdgeInsets.all(8),
-                //       decoration: BoxDecoration(
-                //         color: primaryColor,
-                //         shape: BoxShape.circle,
-                //         border: Border.all(color: Colors.white, width: 2),
-                //       ),
-                //       child: const Icon(
-                //         Remix.camera_line,
-                //         color: Colors.white,
-                //         size: 18,
-                //       ),
-                //     ),
-                //   ),
-                // ),
               ],
             ),
             const SizedBox(height: 32),
@@ -199,18 +176,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final email = _emailController.text.trim();
     final phoneNumber = _phoneController.text.trim();
 
-    if (name.isEmpty) {
-      Get.snackbar('Required', 'Please enter your name',
+    if (name.isEmpty || email.isEmpty || phoneNumber.isEmpty) {
+      Get.snackbar('Required', 'Please fill all fields',
           backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
       return;
     }
-    if (email.isEmpty) {
-      Get.snackbar('Required', 'Please enter your email',
-          backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
-      return;
-    }
-    if (phoneNumber.isEmpty) {
-      Get.snackbar('Required', 'Please enter your phone number',
+
+    if (profileController.userModel.value.messages?.status?.userId == null) {
+      Get.snackbar('Error', 'User Session expired. Please login again.',
           backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
       return;
     }
@@ -224,19 +197,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     profileController
         .updateUserData(name, email, phoneNumber)
-        .then((value) async {
+        .then((success) async {
       Navigator.pop(context); // Close loading dialog
-      if (value) {
-        await profileController.getUserData();
-        Get.snackbar('Success', 'Your profile has been updated.',
+      if (success) {
+        await profileController.getUserData(); // Refresh local data
+        Get.snackbar('Success', 'Profile updated successfully',
             backgroundColor: Colors.green.withOpacity(0.1),
             colorText: Colors.green);
-        Navigator.pop(context); // Go back to profile
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pop(context); // Return to profile screen
+        });
       } else {
-        Get.snackbar('Error', 'Failed to update profile. Please try again.',
+        Get.snackbar('Error', 'Failed to update profile. Check your connection.',
             backgroundColor: Colors.red.withOpacity(0.1),
             colorText: Colors.red);
       }
+    }).catchError((e) {
+      Navigator.pop(context);
+      Get.snackbar('Error', 'An unexpected error occurred',
+          backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
     });
   }
 }

@@ -106,6 +106,7 @@ class AuthController extends GetxController {
       debugPrint("Error in getUserData: $e");
     }
     isLoading.value = false;
+    return false;
   }
 
   clear() {
@@ -119,7 +120,10 @@ class AuthController extends GetxController {
     String phoneNumber,
   ) async {
     String? userId = userModel.value.messages?.status?.userId;
-    if (userId == null) return false;
+    if (userId == null) {
+      debugPrint("Update Profile Failed: User ID is null");
+      return false;
+    }
 
     Map<String, String> header = {
       'Content-type': 'application/json',
@@ -132,13 +136,23 @@ class AuthController extends GetxController {
     };
 
     try {
+      debugPrint("Updating Profile at: ${ApiEndPoint.updateProfile}");
+      debugPrint("Body: ${jsonEncode(body)}");
+      
       http.Response response = await http.post(
-          Uri.parse('https://apniseva.com/API/update_profile'),
+          Uri.parse(ApiEndPoint.updateProfile),
           body: jsonEncode(body),
           headers: header);
 
+      debugPrint("Update Profile Status: ${response.statusCode}");
+      debugPrint("Update Profile Response: ${response.body}");
+
       if (response.statusCode == 200) {
-        return true;
+        final data = jsonDecode(response.body);
+        // Check if the API returned a success status in the body
+        if (data['status'] == 200 || data['error'] == false) {
+          return true;
+        }
       }
     } catch (e) {
       debugPrint("Error in updateUserData: $e");

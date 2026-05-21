@@ -19,7 +19,7 @@ Future<void> initialService() async {
   //}
 }
 
-@pragma('vm-entry-point')
+@pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   if (service is AndroidServiceInstance) {

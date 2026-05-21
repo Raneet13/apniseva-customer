@@ -82,17 +82,16 @@ class _CartScreenState extends State<CartScreen> {
     };
 
     try {
+      cartController.fetch.value = true;
       await initialService();
       _razorpay.open(options);
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
+      cartController.fetch.value = false;
     }
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
-    cartController.paid_amount = int.parse(cartController.price![0]);
-    cartController.payment_id = response.paymentId.toString();
-
     cartController.paid_amount = int.parse(cartController.price![0]);
     cartController.payment_id = response.paymentId.toString();
 
@@ -101,17 +100,19 @@ class _CartScreenState extends State<CartScreen> {
       refresh();
     });
     stopBackgroundService();
-    Fluttertoast.showToast(msg: "SUCCESS: ");
+    Fluttertoast.showToast(msg: "SUCCESS");
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
+    cartController.fetch.value = false;
     stopBackgroundService();
     Fluttertoast.showToast(msg: "ERROR: ${response.code}");
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
+    cartController.fetch.value = false;
     stopBackgroundService();
-    Fluttertoast.showToast(msg: "EXTERNAL_WALLET: ");
+    Fluttertoast.showToast(msg: "EXTERNAL_WALLET");
   }
 
   @override
@@ -338,7 +339,7 @@ class _CartScreenState extends State<CartScreen> {
             child: PrimaryButton(
               width: 200,
               height: 50,
-              onPressed: () => Get.to(const BottomNavBar()),
+              onPressed: () => Get.offAll(() => const BottomNavBar()),
               child: const Text(
                 "Keep Exploring",
                 style: TextStyle(color: Colors.white),
@@ -629,14 +630,16 @@ class _CartScreenState extends State<CartScreen> {
               child: PrimaryButton(
                 width: width,
                 height: 56,
-                onPressed: () async {
+                onPressed: cartController.fetch.value 
+                    ? () {} 
+                    : () async {
                   SharedPreferences preferences =
                       await SharedPreferences.getInstance();
                   String? address = preferences.getString(ApiStrings.addressID);
                   if (address == null || address.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Please add your address git status first'),
+                        content: Text('Please add your address first'),
                         backgroundColor: Colors.orange,
                       ),
                     );
@@ -655,30 +658,36 @@ class _CartScreenState extends State<CartScreen> {
                         backgroundColor: Colors.orange);
                   } else {
                     if (cartController.paymentMode == 'cash') {
-                      Future.delayed(Duration.zero, () {
-                        cartController.checkOut();
-                        refresh();
-                      });
+                      cartController.checkOut();
                     } else {
                       openCheckout();
                     }
                   }
                 },
-                child: Text(
-                  CartStrings.confirmBooking,
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 16,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+                child: cartController.fetch.value
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        CartStrings.confirmBooking,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 16,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
               ),
             )
           : PrimaryButton(
               width: width,
               height: 56,
-              onPressed: () => Get.to(const BottomNavBar()),
+              onPressed: () => Get.offAll(() => const BottomNavBar()),
               child: Text(
                 'Browse Services',
                 style: GoogleFonts.poppins(

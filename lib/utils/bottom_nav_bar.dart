@@ -16,9 +16,17 @@ import 'color.dart';
 
 bool isModalOpen = false;
 
+@pragma('vm:entry-point')
+Future<void> backgroundHandler(RemoteMessage message) async {
+  LocalNotificationService.initialize();
+  LocalNotificationService.createanddisplaynotification(message);
+}
+
 class BottomNavBar extends StatefulWidget {
+  final int initialIndex;
   const BottomNavBar({
     Key? key,
+    this.initialIndex = 0,
   }) : super(key: key);
 
   @override
@@ -28,13 +36,13 @@ class BottomNavBar extends StatefulWidget {
 class _BottomNavBarState extends State<BottomNavBar> {
   DateTime lastTimeBackButtonWasClicked = DateTime.now();
   final cartController = Get.put(CartController());
-  final PersistentTabController _controller =
-      PersistentTabController(initialIndex: 0);
+  late PersistentTabController _controller;
   DateTime? currentBackPressTime;
 
   @override
   void initState() {
     super.initState();
+    _controller = PersistentTabController(initialIndex: widget.initialIndex);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       notificationInit(context);
     });
@@ -54,11 +62,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
       }
       exit(0);
     }
-  }
-
-  Future<void> backgroundHandler(RemoteMessage message) async {
-    LocalNotificationService.initialize();
-    LocalNotificationService.createanddisplaynotification(message);
   }
 
   notificationInit(BuildContext context) async {

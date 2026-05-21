@@ -300,56 +300,66 @@ class CartController extends GetxController {
   }
 
   checkOut() async {
-    CheckOutDataModel checkOutModel = CheckOutDataModel();
+    if (fetch.value) return;
+    fetch.value = true;
 
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    String? userID = preferences.getString(ApiStrings.userID);
-    String? couponAmount = preferences.getString(ApiStrings.couponCharge) ?? "0";
-    String? gstAmount = preferences.getString(ApiStrings.gstAmount) ?? "0";
-    String? addressID = preferences.getString(ApiStrings.addressID);
+    try {
+      CheckOutDataModel checkOutModel = CheckOutDataModel();
 
-    if (userID == null) {
-      Get.snackbar('Error', 'Please login to checkout');
-      return;
-    }
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      String? userID = preferences.getString(ApiStrings.userID);
+      String? couponAmount = preferences.getString(ApiStrings.couponCharge) ?? "0";
+      String? gstAmount = preferences.getString(ApiStrings.gstAmount) ?? "0";
+      String? addressID = preferences.getString(ApiStrings.addressID);
 
-    String? checkOutAPI = ApiEndPoint.checkout;
-    Map<String, dynamic> body = {
-      'user_id': userID,
-      'paymentmode': paymentMode == "online" ? "2" : "1",
-      'date': dateController.text,
-      'time': timeController.text,
-      'productname': productName.toString(),
-      'price': price.toString(),
-      'qty': qty.toString(),
-      'image': image.toString(),
-      'cupone_code': couponTextController.text,
-      'cupone_charge': couponAmount,
-      'gst': gstAmount,
-      'address_id': addressID,
-      'parent_id': parentId.toString(),
-      'gstno': gstTextController.text,
-      'payment_id': payment_id,
-      'paid_amount': paid_amount
-    };
+      if (userID == null) {
+        Get.snackbar('Error', 'Please login to checkout');
+        fetch.value = false;
+        return;
+      }
 
-    Map<String, String> headers = {
-      "Content-Type": "application/json; charset=utf-8"
-    };
+      String? checkOutAPI = ApiEndPoint.checkout;
+      Map<String, dynamic> body = {
+        'user_id': userID,
+        'paymentmode': paymentMode == "online" ? "2" : "1",
+        'date': dateController.text,
+        'time': timeController.text,
+        'productname': productName.toString(),
+        'price': price.toString(),
+        'qty': qty.toString(),
+        'image': image.toString(),
+        'cupone_code': couponTextController.text,
+        'cupone_charge': couponAmount,
+        'gst': gstAmount,
+        'address_id': addressID,
+        'parent_id': parentId.toString(),
+        'gstno': gstTextController.text,
+        'payment_id': payment_id,
+        'paid_amount': paid_amount
+      };
 
-    http.Response response = await http.post(Uri.parse(checkOutAPI),
-        body: jsonEncode(body), headers: headers);
-    print(response.body);
-    checkOutModel = checkOutDataModelFromJson(response.body);
-    if (response.statusCode == 200 && checkOutModel.status == 200) {
-      checkoutDataModel.value = checkOutModel;
+      Map<String, String> headers = {
+        "Content-Type": "application/json; charset=utf-8"
+      };
+
+      http.Response response = await http.post(Uri.parse(checkOutAPI),
+          body: jsonEncode(body), headers: headers);
+      print(response.body);
+      checkOutModel = checkOutDataModelFromJson(response.body);
+      if (response.statusCode == 200 && checkOutModel.status == 200) {
+        checkoutDataModel.value = checkOutModel;
+        Get.snackbar('Cart', 'Submitted');
+        clear();
+        Get.to(() => const SuccessfulScreen());
+      } else {
+        Get.snackbar('Error', 'Checkout failed. Please try again.');
+      }
+    } catch (e) {
+      debugPrint("Error in checkOut: $e");
+      Get.snackbar('Error', 'Something went wrong');
+    } finally {
       fetch.value = false;
-      Get.snackbar('Cart', 'Submitted');
-      Get.to(() => const SuccessfulScreen());
     }
-    fetch.value = false;
-
-    clear();
   }
 
   clear() {

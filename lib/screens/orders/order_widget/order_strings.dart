@@ -4,7 +4,7 @@ class OrderStrings {
   static String productName = 'Product Name: ';
   static String scheduleDate = 'Schedule Date: ';
   static String scheduleTime = 'Schedule Time: ';
-  static String orderDate = 'Order Date: ';
+  static String orderDate = 'Order Date';
   static String viewDetails = 'View Details';
 }
 

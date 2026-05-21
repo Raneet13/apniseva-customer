@@ -26,6 +26,7 @@ class ApiEndPoint {
 
   static String addressAPI = '$baseUrl/add_address';
   static String updateAddress = '$baseUrl/update_address';
+  static String updateProfile = '$baseUrl/update_profile';
 
   static String generatePDF = "https://apniseva.com/Home/generate_pdf";
 }

@@ -1,3 +1,4 @@
+import 'package:apniseva/screens/orders/screens/order_screen.dart';
 import 'package:apniseva/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -196,7 +197,8 @@ class _SuccessfulScreenState extends State<SuccessfulScreen>
                         children: [
                           ElevatedButton(
                             onPressed: () {
-                              Get.offAll(() => const BottomNavBar());
+                              // Get.offAll(() => const BookingScreen());
+                              Get.offAll(() => const BottomNavBar(initialIndex: 1,));
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryColor,

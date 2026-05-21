@@ -59,10 +59,10 @@ class _BookingScreenState extends State<BookingScreen> {
           appBar: OrdersAppBar(title: OrderStrings.title),
           body: RefreshIndicator(
             onRefresh: refresh,
+            color: primaryColor,
             child: Container(
               width: width,
               height: height,
-              padding: const EdgeInsets.symmetric(horizontal: 5),
               child: isGuest
                   ? _buildGuestUI()
                   : orderController.fetchOrder.value == true
@@ -76,13 +76,15 @@ class _BookingScreenState extends State<BookingScreen> {
                           ? Center(
                               child: InkWell(
                                 onTap: () {},
-                                child: const Text(
+                                child: Text(
                                   'No order history\nPlease! Make your first order.',
                                   textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(color: Colors.blueGrey),
                                 ),
                               ),
                             )
                           : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                               itemCount: orderController.orderDataModel.value
                                   .messages!.status!.orderdtls!.length,
                               itemBuilder: (context, index) {
@@ -93,223 +95,100 @@ class _BookingScreenState extends State<BookingScreen> {
                                     .status!
                                     .orderdtls;
                                 return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 5.0),
+                                  padding: const EdgeInsets.symmetric(vertical: 6.0),
                                   child: Card(
-                                    elevation: 1.2,
-                                    color: Colors.grey.shade200,
-                                    child: Container(
-                                      // height: height * 0.24,
-                                      width: width,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 10, horizontal: 10),
+                                    elevation: 2,
+                                    shadowColor: Colors.black.withOpacity(0.2),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    color: Colors.white,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          // OrderID
                                           Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                            horizontal: 8.0,
-                                                            vertical: 5.0),
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.black12,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                8.0)),
-                                                    child: Text(
-                                                      orderData![index].status ?? "",
-                                                      style: TextStyle(
-                                                          fontSize:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .titleSmall!
-                                                                  .fontSize,
-                                                          color: Theme.of(context)
-                                                              .textTheme
-                                                              .labelSmall!
-                                                              .color),
-                                                    ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor.withOpacity(0.08),
+                                                  borderRadius: BorderRadius.circular(8.0),
+                                                ),
+                                                child: Text(
+                                                  orderData![index].status ?? "",
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: primaryColor,
                                                   ),
-                                                  const SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                  RichText(
-                                                      text: TextSpan(children: [
-                                                    TextSpan(
-                                                      text: OrderStrings.orderID,
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .titleLarge,
-                                                    ),
-                                                    TextSpan(
-                                                      text:
-                                                          orderData[index].orderId ?? "",
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .labelSmall,
-                                                    ),
-                                                  ])),
-                                                ],
+                                                ),
                                               ),
-                                              if (orderData[index].status ==
-                                                  "Additional Bill Added")
-                                                Column(
-                                                  children: [
-                                                    AcceptOrderButton(
-                                                      onPressed: () async {
-                                                        orderController.statusId =
-                                                            3;
-                                                        orderController
-                                                            .acceptRejectOrder(
-                                                                orderData[index]
-                                                                    .orderId!);
-
-                                                        debugPrint("Accept");
-                                                      },
-                                                    ),
-                                                    const SizedBox(height: 5),
-                                                    RejectOrderButton(
-                                                      onPressed: () {
-                                                        orderController.statusId =
-                                                            7;
-                                                        orderController
-                                                            .acceptRejectOrder(
-                                                                orderData[index]
-                                                                    .orderId!);
-
-                                                        debugPrint("Reject");
-                                                      },
-                                                    ),
-                                                  ],
-                                                )
-                                              else if (orderData[index].status ==
-                                                  "Work Completed")
+                                              if (orderData[index].status == "Work Completed")
                                                 IconButton(
-                                                    onPressed: () {
-                                                      orderController.generatePDF(
-                                                          orderData[index].orderId);
-                                                    },
-                                                    icon: const Icon(Icons
-                                                        .sim_card_download_rounded))
-                                              else
-                                                Container()
+                                                  padding: EdgeInsets.zero,
+                                                  constraints: const BoxConstraints(),
+                                                  onPressed: () => orderController.generatePDF(orderData[index].orderId),
+                                                  icon: Icon(Icons.download_for_offline_rounded, color: primaryColor, size: 24),
+                                                )
                                             ],
                                           ),
-                                          // const Spacer(),
-                                          const SizedBox(
-                                            height: 5,
-                                          ),
-                                          // Service Date & Time
-                                          RichText(
-                                              text: TextSpan(children: [
-                                            TextSpan(
-                                              text: OrderStrings.scheduleDate,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleLarge,
-                                            ),
-                                            TextSpan(
-                                              text: orderData[index].sheduleDate ?? "",
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .labelSmall,
-                                            )
-                                          ])),
-                                          // SizedBox(height: height * 0.005),
-                                          const SizedBox(
-                                            height: 5,
-                                          ),
-
-                                          RichText(
-                                              text: TextSpan(children: [
-                                            TextSpan(
-                                              text: OrderStrings.scheduleTime,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleLarge,
-                                            ),
-                                            TextSpan(
-                                              text: orderData[index].sheduledTime ?? "",
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .labelSmall,
-                                            )
-                                          ])),
-                                          // SizedBox(height: height * 0.005),
-                                          const SizedBox(
-                                            height: 5,
-                                          ),
-                                          // Order Date
+                                          const SizedBox(height: 14),
+                                          _buildInfoRow(OrderStrings.orderID, orderData[index].orderId ?? ""),
+                                          const SizedBox(height: 6),
+                                          _buildInfoRow(OrderStrings.scheduleDate, orderData[index].sheduleDate ?? ""),
+                                          const SizedBox(height: 6),
+                                          _buildInfoRow(OrderStrings.scheduleTime, orderData[index].sheduledTime ?? ""),
+                                          const SizedBox(height: 6),
                                           Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              RichText(
-                                                  text: TextSpan(children: [
-                                                TextSpan(
-                                                  text:
-                                                      "${OrderStrings.orderDate}:  ",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleLarge,
-                                                ),
-                                                TextSpan(
-                                                  text: orderData[index]
-                                                      .orderDateTime ?? "",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelSmall,
-                                                )
-                                              ])),
+                                              _buildInfoRow("${OrderStrings.orderDate}: ", orderData[index].orderDateTime ?? ""),
                                               InkWell(
                                                 onTap: () async {
-                                                  SharedPreferences pref =
-                                                      await SharedPreferences
-                                                          .getInstance();
-                                                  pref.setString(
-                                                      ApiStrings.orderID,
-                                                      orderData[index]
-                                                          .orderId
-                                                          .toString());
-                                                  debugPrint(orderData[index]
-                                                      .orderId
-                                                      .toString());
-                                                  Get.to(() => OrderBookingDetails(
-                                                        status: orderData![index]
-                                                            .status ?? "",
-                                                      ));
+                                                  SharedPreferences pref = await SharedPreferences.getInstance();
+                                                  pref.setString(ApiStrings.orderID, orderData[index].orderId.toString());
+                                                  Get.to(() => OrderBookingDetails(status: orderData[index].status ?? ""));
                                                 },
                                                 child: Row(
                                                   children: [
                                                     Text(
                                                       OrderStrings.viewDetails,
-                                                      style: TextStyle(
-                                                        fontSize: 10,
+                                                      style: GoogleFonts.poppins(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.bold,
                                                         color: primaryColor,
                                                       ),
                                                     ),
-                                                    const Icon(
-                                                      Icons.double_arrow_rounded,
-                                                      size: 14,
-                                                    )
+                                                    const SizedBox(width: 4),
+                                                    Icon(Icons.double_arrow_rounded, size: 14, color: primaryColor)
                                                   ],
                                                 ),
                                               )
                                             ],
                                           ),
-                                          SizedBox(height: height * 0.005),
+                                          if (orderData[index].status == "Additional Bill Added")
+                                            Padding(
+                                              padding: const EdgeInsets.only(top: 12),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  RejectOrderButton(
+                                                    onPressed: () {
+                                                      orderController.statusId = 7;
+                                                      orderController.acceptRejectOrder(orderData[index].orderId!);
+                                                    },
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  AcceptOrderButton(
+                                                    onPressed: () {
+                                                      orderController.statusId = 3;
+                                                      orderController.acceptRejectOrder(orderData[index].orderId!);
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                         ],
                                       ),
                                     ),
@@ -319,6 +198,29 @@ class _BookingScreenState extends State<BookingScreen> {
             ),
           ));
     });
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return RichText(
+      text: TextSpan(children: [
+        TextSpan(
+          text: label.endsWith(": ") ? label : "$label: ",
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.blueGrey.shade400,
+          ),
+        ),
+        TextSpan(
+          text: value,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.blueGrey.shade900,
+          ),
+        ),
+      ]),
+    );
   }
 
   Widget _buildGuestUI() {
