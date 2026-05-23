@@ -78,9 +78,9 @@ PODS:
   - pointer_interceptor_ios (0.0.1):
     - Flutter
   - PromisesObjC (2.4.0)
-  - razorpay-core-pod (1.0.1)
-  - razorpay-pod (1.5.0):
-    - razorpay-core-pod
+  - razorpay-core-pod (1.0.6)
+  - razorpay-pod (1.5.3):
+    - razorpay-core-pod (= 1.0.6)
   - razorpay_flutter (1.1.10):
     - Flutter
     - razorpay-pod
@@ -169,8 +169,8 @@ SPEC CHECKSUMS:
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   pointer_interceptor_ios: ec847ef8b0915778bed2b2cef636f4d177fa8eed
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  razorpay-core-pod: 42dadbbcef5a65abd02d7bac3e6bf76041934fdd
-  razorpay-pod: f634f1b8397eb54d547f25d35291f679545ddf17
+  razorpay-core-pod: 6da5fb4ed280279d665507fdb50e213d793a5fe2
+  razorpay-pod: 4385cf844aa29389313b741e20c72fe668970d49
   razorpay_flutter: 0e98e4fcaae27ad50e011d85f66d85e0a008754a
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d

@@ -16,12 +16,21 @@ class ServiceController extends GetxController {
       isLoading.value = true;
       ServiceDataModel serviceModel = ServiceDataModel();
       SharedPreferences preferences = await SharedPreferences.getInstance();
-      String? userID = preferences.getString(ApiStrings.userID);
+      //String? userID = preferences.getString(ApiStrings.userID);
+      bool isGuest = preferences.getBool('isGuest') ?? true;
+
+      String? userID = isGuest ? '0' : preferences.getString(ApiStrings.userID);
+
       String? cityID = preferences.getString(ApiStrings.cityID);
+
       String? categoryID = preferences.getString(ApiStrings.catID);
 
       String? serviceAPI = ApiEndPoint.service;
+
       debugPrint("!!!--- Service API: $serviceAPI");
+      debugPrint(
+          "!!!--- Request Body: user_id=$userID, city_id=$cityID, category_id=$categoryID");
+      // for guest user, user_id  will be 0
 
       Map<String, String> body = {
         'user_id': userID!,

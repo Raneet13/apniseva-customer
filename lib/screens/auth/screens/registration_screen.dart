@@ -24,22 +24,47 @@ class RegistrationScreen extends StatefulWidget {
 class _RegistrationScreenState extends State<RegistrationScreen> {
   DateTime lastTimeBackButtonWasClicked = DateTime.now();
   final _regdKey = GlobalKey<FormState>();
-  final AuthController authController = Get.put(AuthController());
+
+  late final AuthController authController;
   String? errorLabel;
 
   @override
   void initState() {
     super.initState();
+
+    // 1. Prevent duplicate controller creation
+    if (!Get.isRegistered<AuthController>()) {
+      Get.put(AuthController());
+    }
+    authController = Get.find<AuthController>();
+
+    // 2. Clear old snackbars to prevent queued errors
+    Get.closeCurrentSnackbar();
+
+    // 3. Initialize safely
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      LocalNotificationService.initNoti();
-      await authController.getDeviceTokenToSendNotification();
+      try {
+        LocalNotificationService.initNoti();
+        // Call notification logic (ensure controller handles error internally)
+        await authController.getDeviceTokenToSendNotification();
+      } catch (e) {
+        debugPrint("Notification Init Error: $e");
+      }
     });
   }
 
   @override
   void dispose() {
-    authController.otpController.dispose();
+    // Only dispose controllers if they were created specifically for this screen
+    // and not globally. Since we used Get.put above, be careful.
+    // If mobileController is global, don't dispose it here.
     super.dispose();
+  }
+
+  // Helper to prevent Opacity crash
+  double _safeOpacity(double val) {
+    if (val.isNaN || val.isInfinite) return 0.0;
+    return val.clamp(0.0, 1.0);
   }
 
   @override
@@ -47,33 +72,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (DateTime.now().difference(lastTimeBackButtonWasClicked) >=
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final now = DateTime.now();
+        if (now.difference(lastTimeBackButtonWasClicked) >=
             const Duration(seconds: 1)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8.0),
-              content: Text("Press the back button again to go back"),
-              duration: Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-            ),
+          Get.closeCurrentSnackbar();
+          Get.snackbar(
+            'Exit App',
+            "Press back button again to exit",
+            duration: const Duration(seconds: 1),
+            snackPosition: SnackPosition.BOTTOM,
           );
-          lastTimeBackButtonWasClicked = DateTime.now();
-          return false;
+          lastTimeBackButtonWasClicked = now;
         } else {
-          return true;
+          // Force exit or navigate back
+          Get.back();
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA), // Very light grey background
+        backgroundColor: const Color(0xFFF8F9FA),
         body: SingleChildScrollView(
           child: SizedBox(
             height: height,
             width: width,
             child: Stack(
               children: [
-                // Top Blue Header Section with Curve
+                // Top Header
                 Positioned(
                   top: 0,
                   left: 0,
@@ -89,7 +116,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                     child: Stack(
                       children: [
-                        // Decorative Circles
                         Positioned(
                           top: -50,
                           right: -50,
@@ -114,18 +140,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             ),
                           ),
                         ),
-
-                        // Logo Content
                         Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              // Logo Animation - FIX APPLIED HERE
                               TweenAnimationBuilder<double>(
                                 tween: Tween(begin: 0.0, end: 1.0),
                                 duration: const Duration(milliseconds: 800),
                                 builder: (context, value, child) {
                                   return Opacity(
-                                    opacity: value,
+                                    opacity:
+                                        _safeOpacity(value), // Safe Opacity
                                     child: Transform.translate(
                                       offset: Offset(0, 20 * (1 - value)),
                                       child: child,
@@ -174,8 +200,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   color: Colors.white.withOpacity(0.8),
                                 ),
                               ),
-                              const SizedBox(
-                                  height: 40), // Space for card overlap
+                              const SizedBox(height: 40),
                             ],
                           ),
                         ),
@@ -194,9 +219,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     duration: const Duration(milliseconds: 800),
                     curve: Curves.easeOutBack,
                     builder: (context, value, child) {
+                      // Safe Opacity applied here too
                       return Transform.translate(
                         offset: Offset(0, 50 * (1 - value)),
-                        child: Opacity(opacity: value, child: child),
+                        child:
+                            Opacity(opacity: _safeOpacity(value), child: child),
                       );
                     },
                     child: Container(
@@ -229,7 +256,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               ),
                             ),
                             const SizedBox(height: 10),
-                            // Container to ensure consistent look for input
                             Container(
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
@@ -245,32 +271,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             PrimaryButton(
                               width: double.infinity,
                               height: 54,
-                              borderRadius: 12, // Increased border radiuss
+                              borderRadius: 12,
                               onPressed: () async {
                                 if (authController
                                     .mobileController.text.isEmpty) {
                                   errorLabel = AuthString.noNumberProvided;
-                                  Get.snackbar('Login Error', errorLabel!,
-                                      backgroundColor: Colors.red[50],
-                                      colorText: Colors.red);
                                 } else if (authController.mobileController.text
                                         .trim()
                                         .length !=
                                     10) {
                                   errorLabel = AuthString.validation;
-                                  Get.snackbar('Login Error', errorLabel!,
-                                      backgroundColor: Colors.red[50],
-                                      colorText: Colors.red);
                                 } else if (_regdKey.currentState!.validate()) {
                                   SharedPreferences preferences =
                                       await SharedPreferences.getInstance();
                                   preferences.setString(ApiStrings.mobile,
                                       authController.mobileController.text);
+                                  authController.loginWithOTP();
+                                  return;
+                                }
 
-                                  Future.delayed(Duration.zero, () {
-                                    authController.loginWithOTP();
-                                  });
-                                } else {
+                                // Show error snackbar only if logic failed above
+                                if (errorLabel != null) {
                                   Get.snackbar('Login Error', errorLabel!,
                                       backgroundColor: Colors.red[50],
                                       colorText: Colors.red);
@@ -298,7 +319,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       );
                               }),
                             ),
-                            SizedBox(height: 25),
+                            const SizedBox(height: 25),
                             Center(
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -314,28 +335,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 ],
                               ),
                             ),
-                            SizedBox(height: 25),
+                            const SizedBox(height: 25),
                             Center(
                               child: TextButton(
                                 onPressed: () async {
-                                  // ✅ Set guest flag
                                   SharedPreferences prefs =
                                       await SharedPreferences.getInstance();
-                                  await prefs.setBool(
-                                      'isGuest', true); // Mark as guest
-
-                                  // ✅ Check if city is selected
+                                  await prefs.setBool('isGuest', true);
                                   String? cityID =
                                       prefs.getString(ApiStrings.cityID);
 
                                   if (cityID == null) {
-                                    debugPrint(
-                                        "!!!!!---- No city selected, navigating to location screen.");
-                                    // No city selected → Go to city selection
                                     Get.offAll(
                                         () => const MainLocationScreen());
                                   } else {
-                                    // City already selected → Go to dashboard
                                     Get.offAll(() => const BottomNavBar());
                                   }
                                 },
@@ -344,7 +357,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 14,
-                                    // ignore: deprecated_member_use
                                     color: primaryColor.withOpacity(0.7),
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -358,8 +370,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                 ),
                 SizedBox(height: height * 0.75),
-
-                // Footer
                 Positioned(
                   bottom: 30,
                   left: 0,
